@@ -1,0 +1,42 @@
+
+## Project information
+projtype set
+projname box
+projunits mm-g-s
+
+## Material properties shared by all bodies
+youngs 7.0E8										
+poisson 0.24								
+mu_pp 0.16									
+mu_pw 0.45									
+mu_roll 0.09									
+mu_spin 0								
+cor_pp 0.9
+cor_pw 0.5												
+ad 0.0
+
+## Geometric properties of the container
+cxlength 315.0
+cylength 315.0
+czlength 140.0
+cthickness 10.0
+cmass 1.0E3
+
+## Geometric properties of the granular surface material
+gdia 10.0
+gmarg 0.5
+grho 2.48E-3
+gvel 1.0E3
+
+## Simulation run-time parameters
+grav_x 0.0	 
+grav_y 0.0 
+grav_z -9.81E3
+time_step 5.0E-6
+save_step 1.0E-4
+save_step 0.1
+sim_durations 0.25
+
+## Simulation solver and collision detection parameters
+force_model hertz
+adhesion_model constant
