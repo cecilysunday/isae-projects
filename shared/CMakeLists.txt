@@ -4,7 +4,7 @@
 #
 #=============================================================================
 
-message(STATUS "==== Chrono Wheel Testing - Shared Library ====")
+message(STATUS "==== Shared Library ====")
 
 #-----------------------------------------------------------------------------
 # Collect files in the main WheelSim library
