@@ -37,7 +37,7 @@
 // If IRRLICHT is enabled, add irrlicht headers and namespaces
 #ifdef CHRONO_IRRLICHT
 #include <irrlicht.h>
-#include "chrono_irrlicht/ChIrrApp.h"
+#include "chrono_irrlicht/ChVisualSystemIrrlicht.h"
 using namespace chrono::irrlicht;
 #endif
 
@@ -70,9 +70,10 @@ void AddSphere(int id, ChSystemMulticoreSMC* msystem, const ConfigParameters& cp
 
 	// Attach a random color to the sphere
 	#ifdef CHRONO_IRRLICHT
-	std::shared_ptr<ChColorAsset> mvisual = chrono_types::make_shared<ChColorAsset>();
+	auto mvisual = chrono_types::make_shared<ChSphereShape>();
+	mvisual->GetSphereGeometry().rad = radius;
 	mvisual->SetColor(ChColor(0.0f, 0.28f, 0.67f));
-	body->AddAsset(mvisual);
+	body->AddVisualShape(mvisual);
 	#endif
 
 	// Add the sphere to the system 
@@ -99,9 +100,10 @@ void AddWall(int id, ChSystemMulticoreSMC* msystem, const ConfigParameters &cp,
 
 	// Attach a color to the visible container
 	#ifdef CHRONO_IRRLICHT
-	auto mvisual = chrono_types::make_shared<ChColorAsset>();
+	auto mvisual = chrono_types::make_shared<ChBoxShape>();
+	mvisual->GetBoxGeometry().Size = size;
 	mvisual->SetColor(ChColor(0.35f, 0.85f, 0.15f));
-	body->AddAsset(mvisual);
+	if (vis) body->AddVisualShape(mvisual);
 	#endif
 
 	// Add the wall to the system
@@ -232,12 +234,16 @@ int main(int argc, char* argv[]) {
 
 	// Create and configure the irrlicht visualizer 
 	#ifdef CHRONO_IRRLICHT
-	ChIrrApp application(&msystem, L"BOX_SET", irr::core::dimension2d<irr::u32>(800, 600), VerticalDir::Z);
-	application.AddTypicalSky();
-	application.AddTypicalLights();
-	application.AddTypicalCamera(irr::core::vector3df(0, cp.clength_x * 2, cp.clength_z), irr::core::vector3df(0, 0, cp.clength_z));
-	application.AssetBindAll();
-	application.AssetUpdateAll();
+	auto application = chrono_types::make_shared<ChVisualSystemIrrlicht>();
+	application->AttachSystem(&msystem);
+	application->SetWindowSize(800, 600);
+	application->SetWindowTitle("BOX_SET");
+	application->SetCameraVertical(CameraVerticalDir::Z);
+	application->Initialize();
+	application->AddTypicalLights();
+	application->AddSkyBox();
+	application->AddCamera(ChVector<>(0, cp.clength_x * 2, cp.clength_z), ChVector<>(0, 0, cp.clength_z));
+	application->AddLight(ChVector<>(0, cp.clength_z * 2, cp.clength_z), cp.clength_z * 2);
 	#endif
 
 	// Set the soft run-time parameters
@@ -252,10 +258,10 @@ int main(int argc, char* argv[]) {
 	while (time < cp.sim_duration) {
 		// Start irrlicht visualization scene
 		#ifdef CHRONO_IRRLICHT
-		application.BeginScene(true, true);
-		application.GetDevice()->run();
-		application.DrawAll();
-		application.EndScene();
+		application->BeginScene();
+		application->Render();
+		application->GetDevice()->run();
+		application->EndScene();
 		#endif
 
 		// Calculate dynamics for (cp.time_loop / time_step) continuous steps  
