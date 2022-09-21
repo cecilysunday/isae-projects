@@ -39,7 +39,7 @@
 // If IRRLICHT is enabled, add irrlicht headers and namespaces
 #ifdef CHRONO_IRRLICHT
 #include <irrlicht.h>
-#include "chrono_irrlicht/ChIrrApp.h"
+#include "chrono_irrlicht/ChVisualSystemIrrlicht.h"
 using namespace chrono::irrlicht;
 #endif
 
@@ -124,7 +124,6 @@ int UpdateWallProperties(ChSystemMulticoreSMC* msystem, const ConfigParameters& 
 
 	// Change the collision properties of the roof
 	roof->SetCollide(false);
-	roof->GetAssets().clear();
 
 	// Identify the old and new height of the projectile based on the actual surface height of the beads
 	ChVector<> pold = projectile->GetPos();
@@ -167,9 +166,10 @@ std::shared_ptr<MyCustomCollisionDetection> AddSphere(int id, ChSystemMulticoreS
 
 	// Attach a random color to the sphere
 	#ifdef CHRONO_IRRLICHT
-	std::shared_ptr<ChColorAsset> mvisual = chrono_types::make_shared<ChColorAsset>();
+	auto mvisual = chrono_types::make_shared<ChSphereShape>();
+	mvisual->GetSphereGeometry().rad = radius;
 	mvisual->SetColor(ChColor(0.0f, 0.28f, 0.67f));
-	body->AddAsset(mvisual);
+	body->AddVisualShape(mvisual);
 	#endif
 
 	// Add the sphere to the system 
@@ -209,9 +209,10 @@ void AddProjectile(int id, ChSystemMulticoreSMC* msystem, const ConfigParameters
 
 	// Attach a color to the sphere
 	#ifdef CHRONO_IRRLICHT
-	auto mvisual = chrono_types::make_shared<ChColorAsset>();
+	auto mvisual = chrono_types::make_shared<ChSphereShape>();
+	mvisual->GetSphereGeometry().rad = cp.ilength_r;
 	mvisual->SetColor(ChColor(0.67f, 0.66f, 0.68f));
-	body->AddAsset(mvisual);
+	body->AddVisualShape(mvisual);
 	#endif
 
 	// Add the body to the system. Note that projectile-wall collisions will go undetected!
@@ -220,7 +221,15 @@ void AddProjectile(int id, ChSystemMulticoreSMC* msystem, const ConfigParameters
 }
 
 
-void AddWall(int id, ChSystemMulticoreSMC* msystem, const ConfigParameters &cp, ChVector<> size, ChVector<> pos, bool collide, bool sidewall) {
+void AddWall(int id, ChSystemMulticoreSMC* msystem, const ConfigParameters &cp, ChVector<> size, ChVector<> pos, bool collide, 
+	bool sidewall, bool vis) {
+	// Adjust switch values for sidewalls
+	bool rings = vis;
+	if (sidewall) {
+		collide = false;
+		vis = false;
+	}
+
 	// Create container walls. Set parameters and collision model.
 	auto body = std::shared_ptr<ChBody>(msystem->NewBody());
 	body->SetIdentifier(id);
@@ -231,26 +240,29 @@ void AddWall(int id, ChSystemMulticoreSMC* msystem, const ConfigParameters &cp, 
 	body->SetCollide(collide);
 
 	body->GetCollisionModel()->ClearModel();
-	utils::AddCylinderGeometry(body.get(), cp.mat_pw, size.x(), size.z(), VNULL, QUNIT, !sidewall);
+	utils::AddCylinderGeometry(body.get(), cp.mat_pw, size.x(), size.z(), VNULL, QUNIT, vis);
 	body->GetCollisionModel()->BuildModel();
 
 	// Attach a color to the visible container
 	#ifdef CHRONO_IRRLICHT
-	if (sidewall) {
+	if (sidewall & rings) {
 		int rnum = 10;
 		double rgap = size.z() * 2.0 / rnum;
 		for (int i = 0; i <= rnum; i++) {
-			ChLineArc circle(ChCoordsys<>(ChVector<>(pos.x(), pos.z() - 2.0 * size.z() + i*rgap, pos.y()), Q_ROTATE_Y_TO_Z), size.x());
+			ChLineArc vcircle(ChCoordsys<>(ChVector<>(0, pos.z() - 2.0 * size.z() + i * rgap, 0), Q_ROTATE_Y_TO_Z), size.x());
 			auto mpath = chrono_types::make_shared<ChPathShape>();
-			mpath->GetPathGeometry()->AddSubLine(circle);
-			mpath->SetColor(ChColor(0.35f, 0.85f, 0.15f));
-			body->AddAsset(mpath);
+			mpath->GetPathGeometry()->AddSubLine(vcircle);
+			mpath->SetColor(ChColor(0.0f, 0.0f, 0.0f));
+			body->AddVisualShape(mpath);
 		}
 	}
 	else {
-		auto mvisual = chrono_types::make_shared<ChColorAsset>();
+		auto mvisual = chrono_types::make_shared<ChCylinderShape>();
+		mvisual->GetCylinderGeometry().rad = size.x();
+		mvisual->GetCylinderGeometry().p1 = ChVector<>(0, size.z(), 0);
+		mvisual->GetCylinderGeometry().p2 = ChVector<>(0, -size.z(), 0);
 		mvisual->SetColor(ChColor(0.35f, 0.85f, 0.15f));
-		body->AddAsset(mvisual);
+		if (vis) body->AddVisualShape(mvisual);
 	}
 	#endif
 
@@ -328,9 +340,12 @@ std::pair<size_t, size_t> CreateContainer(ChSystemMulticoreSMC* msystem, const C
 	ChVector<> pwall = ChVector<>(0, 0, temph) / 2.0;
 	ChVector<> proof = ChVector<>(0, 0, temph * 2.0 + cp.cthickness) / 2.0;
 
-	AddWall(--id, msystem, cp, sbase, pbase, true, false);
-	AddWall(--id, msystem, cp, swall, pwall, false, true);
-	AddWall(--id, msystem, cp, sbase, proof, true, false);
+	AddWall(--id, msystem, cp, sbase, pbase, true, false, true);
+	AddWall(--id, msystem, cp, swall, pwall, true, true, true);
+	AddWall(--id, msystem, cp, sbase, proof, true, false, false);
+
+	// Add the projectile
+	AddProjectile(--id, msystem, cp);
 
 	// Find and return index range of full wall list 
 	wlist.second = msystem->Get_bodylist().size() - 1;
@@ -375,12 +390,16 @@ int main(int argc, char* argv[]) {
 
 	// Create and configure the irrlicht visualizer 
 	#ifdef CHRONO_IRRLICHT
-	ChIrrApp application(&msystem, L"IMPACT", irr::core::dimension2d<irr::u32>(800, 600), VerticalDir::Z);
-	application.AddTypicalSky();
-	application.AddTypicalLights();
-	application.AddTypicalCamera(irr::core::vector3df(0, cp.clength_x * 2, cp.clength_z), irr::core::vector3df(0, 0, cp.clength_z));
-	application.AssetBindAll();
-	application.AssetUpdateAll();
+	auto application = chrono_types::make_shared<ChVisualSystemIrrlicht>();
+	application->AttachSystem(&msystem);
+	application->SetWindowSize(800, 600);
+	application->SetWindowTitle("CYL_SET");
+	application->SetCameraVertical(CameraVerticalDir::Z);
+	application->Initialize();
+	application->AddTypicalLights();
+	application->AddSkyBox();
+	application->AddCamera(ChVector<>(0, cp.clength_x * 2, cp.clength_z), ChVector<>(0, 0, cp.clength_z));
+	application->AddLight(ChVector<>(0, cp.clength_z * 2, cp.clength_z), cp.clength_z * 2);
 	#endif
 
 	// Set the soft run-time parameters
@@ -391,11 +410,12 @@ int main(int argc, char* argv[]) {
 	while (time < 0.1) { // cp.sim_duration
 		// Start irrlicht visualization scene
 		#ifdef CHRONO_IRRLICHT
-		application.BeginScene(true, true);
-		application.GetDevice()->run();
-		application.DrawAll();
-		application.EndScene();
+		application->BeginScene();
+		application->Render();
+		application->GetDevice()->run();
+		application->EndScene();
 		#endif
+
 
 		// Calculate dynamics for (cp.time_loop / time_step) continuous steps  
 		while (time < time_loop) {
@@ -438,11 +458,12 @@ int main(int argc, char* argv[]) {
 	while (time < sim_duration) {
 		// Start irrlicht visualization scene
 		#ifdef CHRONO_IRRLICHT
-		application.BeginScene(true, true);
-		application.GetDevice()->run();
-		application.DrawAll();
-		application.EndScene();
+		application->BeginScene();
+		application->Render();
+		application->GetDevice()->run();
+		application->EndScene();
 		#endif
+
 
 		// Calculate dynamics for (cp.time_loop / time_step) continuous steps  
 		while (time < time_loop) {
