@@ -16,14 +16,14 @@ cor_pw 0.5
 ad 0.0
 
 ## Geometric properties of the container
-clength_x 10.0
-clength_y 10.0
+clength_x 5
+clength_y 5
 clength_z 10.0
 cthickness 1.0
 cmass 1.0E3
 
 ## Geometric properties of the granular surface material
-gdia 2.0
+gdia 3
 gmarg 0.5
 grho 2.48E-3
 gvel 1.0E3
@@ -35,8 +35,11 @@ grav_z -9.81E3
 time_step 1.0E-5
 time_loop 1.0E-3
 time_save 0.1
-sim_duration 0.5
+sim_duration 1
 
 ## Simulation solver and collision detection parameters
 force_model hertz
 adhesion_model constant
+
+##Parameters of control box for pressure measurement
+control_box_size_in_number_of_grain_radius 4

@@ -353,6 +353,9 @@ int ComputeDerivedStuctValues(ConfigParameters* config, const std::string& dates
 	config->bpa_y = (int)std::ceil(config->clength_y / config->gdia / 3.0);
 	config->bpa_z = (int)std::ceil(config->clength_z / config->gdia / 3.0);
 
+	//Control_box_size for pressure measurement
+	config->control_box_size = config->grad*config->control_box_size_nb_of_grain_radius;
+
 	// Add a parameter to describe the radius of a cylindrical container
 	if (config->proj_container == "cyl") {
 		if (config->clength_x != config->clength_y) {
@@ -379,6 +382,8 @@ int ComputeDerivedStuctValues(ConfigParameters* config, const std::string& dates
 		}
 		else config->ilength_r = config->ilength_x / 2.0;
 	}
+
+
 
 	return 0;
 }
@@ -464,6 +469,19 @@ int MapParameters(ConfigParameters& config, const std::vector<std::string>& pars
 	else if (param == "bpa_x") config.bpa_x = std::stoi(val);
 	else if (param == "bpa_y") config.bpa_y = std::stoi(val);
 	else if (param == "bpa_z") config.bpa_z = std::stoi(val);
+
+	else if (param == "control_box_size_in_number_of_grain_radius") config.control_box_size_nb_of_grain_radius = std::stoi(val);
+	
+	else if (param == "dist_funnel_platform") config.dist_funnel_platform = std::stod(val);
+	else if (param == "angle_funnel") config.angle_funnel= std::stod(val);
+	// else if (param == "ratio_funnel_small_bead_diameter") config.ratio_funnel_small_bead_diameter= std::stod(val);
+	// else if (param == "ratio_funnel_small_funnel_large") config.ratio_funnel_small_funnel_large= std::stod(val);
+	else if (param == "platform_size") config.platform_size= std::stod(val);
+	else if (param == "height_stem") config.height_stem= std::stod(val);
+	else if (param == "funnel_small_diameter") config.funnel_small_dia= std::stod(val);
+	else if (param == "funnel_large_diameter") config.funnel_large_dia= std::stod(val);
+
+	
 	else {
 		fprintf(stderr, "\nERR: Error mapping configuration parameters! Could not match the '%s' input to a ConfigParameter type.\n", param.c_str());
 		return -1;

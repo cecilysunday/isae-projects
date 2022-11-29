@@ -73,6 +73,21 @@ typedef struct ConfigParameters {
 	double min_roll_vel = 1E-5;
 	double min_spin_vel = 1E-5;
 
+	//Pressure measurement
+	int control_box_size_nb_of_grain_radius=0;
+	double control_box_size=0.0;
+
+	//Angle of repose
+	double dist_funnel_platform=0.0;
+	double angle_funnel=0.0;
+	double ratio_funnel_small_bead_diameter=0.0;
+	double ratio_funnel_small_funnel_large = 0.0;
+	double platform_size = 0.0;
+	double funnel_small_dia=0.0;
+	double funnel_large_dia=0.0;
+	double height_stem=0.0;
+	
+
 	uint max_itbilateral = 100;
 
 	int bpa_x = 10;

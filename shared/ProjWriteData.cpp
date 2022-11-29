@@ -350,6 +350,7 @@ int StoreData(const ChSystemMulticoreSMC& msystem, ParticleData** data, const si
 	// Do for all particles in the system
 	for (size_t i = 0; i < num_particles; ++i) {
 		// Get the body and the body shape, assuming that there is only one object per collision model
+
 		const std::shared_ptr<ChBody> body = msystem.Get_bodylist().at(id);
 
 		auto pmodel = body->GetCollisionModel();
@@ -444,16 +445,22 @@ int ArchiveState(const ChSystemMulticoreSMC& msystem, const SystemData& stats, c
 
 	// Create a dynamically allocated 2D array to hold the particle info
 	ParticleData** data = new ParticleData * [num_bodies];
+
 	for (size_t i = 0; i < num_bodies; ++i) {
 		data[i] = new ParticleData[1];
 		memset(data[i], 0, sizeof(ParticleData));
 	}
 
+	std::cout<<"ProjWriteData : before StoreData \n";
+	// std::cout<<"ProjWriteData : data.size = "<<*data.size()<<", num_bodies = "<<num_bodies<<", start_index = "<<start_index<<"\n";
 	// Store and write the particle info
 	if (StoreData(msystem, data, num_bodies, start_index, 0) != 0) return -1;
+	
+	std::cout<<"WriteBinFile : before WriteBinFile \n";
 	if (WriteBinFile(data, bin_name, num_bodies, 1) != 0) return -1;
 
 	// Delete the dynamically allocated 2D array and return
+
 	for (size_t i = 0; i < num_bodies; ++i) {
 		delete[] data[i];
 	}

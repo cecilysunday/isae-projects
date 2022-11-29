@@ -17,6 +17,9 @@ SET(TESTS
   penetrometer
   setbox
   setcyl
+  setbox_pressure
+  demo_paths
+  repose_set
   )
 
 #--------------------------------------------------------------

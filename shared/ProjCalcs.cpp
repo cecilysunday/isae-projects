@@ -108,6 +108,7 @@ bool CalcAverageKE(const ChSystemMulticoreSMC &msystem, const std::string &path,
 	txt_out.close();
 
 	// Return true if the max particle velocity falls below the given threshold
+	std::cout<<"Vel_max = "<<vel_max<<", RMS_vel = "<<RMS_vel<<"\n";
 	if (vel_max < threshold && RMS_vel < threshold / 100) return true;
 	return false;
 }
