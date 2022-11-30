@@ -451,12 +451,10 @@ int ArchiveState(const ChSystemMulticoreSMC& msystem, const SystemData& stats, c
 		memset(data[i], 0, sizeof(ParticleData));
 	}
 
-	std::cout<<"ProjWriteData : before StoreData \n";
 	// std::cout<<"ProjWriteData : data.size = "<<*data.size()<<", num_bodies = "<<num_bodies<<", start_index = "<<start_index<<"\n";
 	// Store and write the particle info
 	if (StoreData(msystem, data, num_bodies, start_index, 0) != 0) return -1;
-	
-	std::cout<<"WriteBinFile : before WriteBinFile \n";
+
 	if (WriteBinFile(data, bin_name, num_bodies, 1) != 0) return -1;
 
 	// Delete the dynamically allocated 2D array and return

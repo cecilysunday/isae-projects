@@ -86,7 +86,8 @@ typedef struct ConfigParameters {
 	double funnel_small_dia=0.0;
 	double funnel_large_dia=0.0;
 	double height_stem=0.0;
-	
+	double bead_rad_std=0.0;
+	std::string config_platform_file = "NA"; 
 
 	uint max_itbilateral = 100;
 
