@@ -715,7 +715,8 @@ int main(int argc, char* argv[]) {
 
 	// Add the shadowbox to the simulation. If this is a sim reboot, reconstruct the previous scene
 	// std::pair<size_t, size_t> wlist = CreateContainer(&msystem, cp, istate_data, num_imported, rerun);
-	std::pair<std::pair<size_t, size_t>,std::pair<size_t, size_t>> lists = AddFunnel(&msystem, cp, istate_data, num_imported, rerun);
+	std::pair<std::pair<size_t, size_t>,std::pair<size_t, size_t>> lists = AddFunnel(&msystem, cp, istate_data, num_imported, 
+		platform_x_pos,platform_y_pos,platform_rad,rerun);
 	std::pair<size_t, size_t> glist=lists.first;
 	std::pair<size_t, size_t> wlist=lists.second;
 	std::cout<<"wlist = ("<<wlist.first<<","<<wlist.second<<"), glist = ("<<glist.first<<","<<glist.second<<") \n";
