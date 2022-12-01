@@ -43,11 +43,11 @@ using namespace chrono::irrlicht;
 using namespace chrono;
 using namespace chrono::collision;
 using namespace chrono::geometry;
-using namespace chrono::irrlicht;
+
 
 int main(int argc, char* argv[]) {
     GetLog() << "Copyright (c) 2017 projectchrono.org\nChrono version: " << CHRONO_VERSION << "\n\n";
-    SetChronoDataPath(CHRONO_DATA_DIR);
+    /*SetChronoDataPath(CHRONO_DATA_DIR);
 
     // Create a Chrono::Engine physical system
     // ChSystemNSC sys;
@@ -282,6 +282,6 @@ int main(int argc, char* argv[]) {
 
         // realtime_timer.Spin(timestep);
     }
-
+    */
     return 0;
 }

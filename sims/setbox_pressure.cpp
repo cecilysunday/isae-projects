@@ -46,17 +46,16 @@
 #include <iostream>
 
 // If IRRLICHT is enabled, add irrlicht headers and namespaces
-// #ifdef CHRONO_IRRLICHT
+#ifdef CHRONO_IRRLICHT
 #include <irrlicht.h>
 #include "chrono_irrlicht/ChVisualSystemIrrlicht.h"
 using namespace chrono::irrlicht;
-// #endif
+#endif
 
 // Other namespace declatartions
 using namespace chrono;
 using namespace chrono::collision;
 using namespace chrono::geometry;
-using namespace chrono::irrlicht;
 
 class ContactReporter : public ChContactContainer::ReportContactCallback {
   public:

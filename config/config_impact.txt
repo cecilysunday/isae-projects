@@ -1,6 +1,6 @@
 
 ## Project information
-proj_setdir D:\c.sunday\Documents\Chrono\00_data\setcyl\220610_093521
+proj_setdir /tmpdir/marti/data/setcyl/220923_103320/
 proj_type impact
 proj_container cyl
 proj_intruder sph

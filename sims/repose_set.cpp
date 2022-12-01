@@ -36,17 +36,17 @@
 #include <iostream>
 
 // If IRRLICHT is enabled, add irrlicht headers and namespaces
-// #ifdef CHRONO_IRRLICHT
+#ifdef CHRONO_IRRLICHT
 #include <irrlicht.h>
 #include "chrono_irrlicht/ChVisualSystemIrrlicht.h"
 using namespace chrono::irrlicht;
-// #endif
+#endif
 
 // Other namespace declatartions
 using namespace chrono;
 using namespace chrono::collision;
 using namespace chrono::geometry;
-using namespace chrono::irrlicht;
+
 
 // Nozzel and box geometric properties that by sim type
 const double NOZZEL_DIA = 5.0;  // 6 for half scale, 8.0 for full
