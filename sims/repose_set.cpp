@@ -100,7 +100,7 @@ void AddSphere(int id, ChSystemMulticoreSMC* msystem, const ConfigParameters &cp
 	#ifdef CHRONO_IRRLICHT
 	auto mvisual = chrono_types::make_shared<ChSphereShape>();
 	mvisual->GetSphereGeometry().rad = radius;
-	if (iswall) mvisual->SetColor(ChColor(0.0f, 1.0f, 1.0f));
+	if (iswall) mvisual->SetColor(ChColor(1.0f, 1.0f, 1.0f));
 	else mvisual->SetColor(ChColor(0.0f, 1.0f, 1.0f));
 	body->AddVisualShape(mvisual);
 	#endif
@@ -328,32 +328,20 @@ std::pair<size_t, size_t> FillFunnel(ChSystemMulticoreSMC* msystem, const Config
 }
 
 void AddPlatform(ChSystemMulticoreSMC* msystem, const ConfigParameters &cp, 
-	std::vector<double> x_pos, std::vector<double> y_pos,std::vector<double> rad,int id){
+	std::vector<double> x_pos, std::vector<double> y_pos,std::vector<double> rad,int* id){
 
 	int n=x_pos.size();
 
-	// Add platform
-	auto platform= std::shared_ptr<ChBody>(msystem->NewBody());
-	platform->SetIdentifier(--id);
-	platform->SetMass(cp.cmass);
-	platform->SetBodyFixed(true);
-	platform->SetCollide(true);
-	platform->SetIdentifier(id);
 
-	platform->GetCollisionModel()->ClearModel();
 
 	for(int i=0;i<n;i++){
 		double x = x_pos[i];
 		double y = y_pos[i];
 		double radius = rad[i];
-		utils::AddSphereGeometry(platform.get(), cp.mat_pp, radius, ChVector<>(x, y, 0), ChQuaternion<>(1, 0, 0, 0), true);
-
+		// utils::AddSphereGeometry(platform.get(), cp.mat_pp, radius, ChVector<>(x, y, 0), ChQuaternion<>(1, 0, 0, 0), true);
+		AddSphere(*id--,msystem,cp,cp.grad,ChVector<>(x, y, 0),ChQuaternion<>(1, 0, 0, 0),ChVector<>(0),ChVector<>(0),true,true);
 
 	}
-
-	platform->GetCollisionModel()->BuildModel();
-
-	msystem->AddBody(platform);
 	}
 
 
@@ -407,14 +395,22 @@ std::pair<std::pair<size_t, size_t>,std::pair<size_t, size_t>> AddFunnel(ChSyste
 	ChVector<> npos(0,0,dist_funnel_platform+grad) ;
 	ChVector<> ramp_pos, body_pos;
 	ChVector<> stem_pos(0,0,dist_funnel_platform);
-	// Add funnel
-	auto funnel= std::shared_ptr<ChBody>(msystem->NewBody());
-	funnel->SetIdentifier(--id);
-	funnel->SetMass(cp.cmass);
-	funnel->SetBodyFixed(true);
-	funnel->SetCollide(true);
 
-	funnel->GetCollisionModel()->ClearModel();
+	double height=cp.dist_funnel_platform+(numh_stem-1)*sftz+grad+2.0*grad*sin(rang)*(numl_ramp-1)+2.0*grad*cos(rang);
+	double* cyl_height=&height;
+	std::pair<size_t, size_t> glist;
+	glist = FillFunnel(msystem, cp, crad_body, nb_particles,cyl_height,ChVector<>(0,0,height));
+	std::pair<size_t, size_t> wlist;
+	wlist.first = msystem->Get_bodylist().size();
+	
+	// Add funnel
+	// auto funnel= std::shared_ptr<ChBody>(msystem->NewBody());
+	// funnel->SetIdentifier(--id);
+	// funnel->SetMass(cp.cmass);
+	// funnel->SetBodyFixed(true);
+	// funnel->SetCollide(true);
+
+	// funnel->GetCollisionModel()->ClearModel();
 	for (int i = 0; i < numd_stem; ++i) {
 		for (int j = 0; j < numh_stem; ++j) {
 			int add_sft = 0;
@@ -424,9 +420,12 @@ std::pair<std::pair<size_t, size_t>,std::pair<size_t, size_t>> AddFunnel(ChSyste
 			double posz = j * sftz;
 			double posy = crad_stem * cos(theta_stem * i + theta_stem / 2.0 * add_sft);
 			stem_pos = npos + ChVector<>(0,0, posz);
-			utils::AddSphereGeometry(funnel.get(), cp.mat_pp, grad, npos + ChVector<>(posx, posy, posz), ChQuaternion<>(1, 0, 0, 0), true);
+			// utils::AddSphereGeometry(funnel.get(), cp.mat_pp, grad, npos + ChVector<>(posx, posy, posz), ChQuaternion<>(1, 0, 0, 0), true);
+			AddSphere(id--,msystem,cp,grad,npos + ChVector<>(posx, posy, posz),ChQuaternion<>(1, 0, 0, 0),ChVector<>(0),ChVector<>(0),true,true);
 		}
 	}
+	double ramp_pos_estim=cp.dist_funnel_platform+(numh_stem-1)*sftz+grad;
+	std::cout<<"stem_pos fin 1ere boucle = "<<stem_pos.z()<<", estim = "<<ramp_pos_estim<<"\n";
 	for (int i = 1; i < numl_ramp; ++i) {
 		double sftx = 2.0 * grad * cos(rang) * i;
 		double sftz = 2.0 * grad * sin(rang) * i;
@@ -440,16 +439,15 @@ std::pair<std::pair<size_t, size_t>,std::pair<size_t, size_t>> AddFunnel(ChSyste
 			double posz = sftz;
 			double posy = crad_ramp * cos(j*theta_ramp + theta_ramp / 2.0);
 			ramp_pos = stem_pos + ChVector<>(0,0,posz + 2.0 * grad * cos(rang));
-			utils::AddSphereGeometry(funnel.get(), cp.mat_pp, grad, stem_pos + ChVector<>(posx, posy, posz), ChQuaternion<>(1, 0, 0, 0), true);
+			// utils::AddSphereGeometry(funnel.get(), cp.mat_pp, grad, stem_pos + ChVector<>(posx, posy, posz), ChQuaternion<>(1, 0, 0, 0), true);
+			AddSphere(id--,msystem,cp,grad,stem_pos + ChVector<>(posx, posy, posz),ChQuaternion<>(1, 0, 0, 0),ChVector<>(0),ChVector<>(0),true,true);
 		}
 	}
-	double height=ramp_pos.z();
-	double* cyl_height=&height;
-	std::pair<size_t, size_t> glist;
-	glist = FillFunnel(msystem, cp, crad_body, nb_particles,cyl_height,ramp_pos);
+	ramp_pos_estim+=2.0*grad*sin(rang)*(numl_ramp-1)+2.0*grad*cos(rang);
+	std::cout<<"ramp_pos.z() à la fin : "<<ramp_pos.z()<<", estimation = "<<ramp_pos_estim<<"\n";
 
-	std::pair<size_t, size_t> wlist;
-	wlist.first = msystem->Get_bodylist().size();
+
+
 	std::cout<<"Final height = "<<*cyl_height<<"\n";
 	*cyl_height+=4*cp.grad;
 	double numh_body = round((*cyl_height - 2.0 * grad) / sftz + 1);				/// Num particles needed to preserve the funnel body height
@@ -468,13 +466,14 @@ std::pair<std::pair<size_t, size_t>,std::pair<size_t, size_t>> AddFunnel(ChSyste
 			posz = j * sftz;
 			double posy = crad_body * cos(i*theta_body + theta_body / 2.0 * add_sft);
 			body_pos = ramp_pos + ChVector<>(0, posz, 0);
-			utils::AddSphereGeometry(funnel.get(), cp.mat_pp, grad, ramp_pos + ChVector<>(posx, posy, posz), ChQuaternion<>(1, 0, 0, 0), true);
+			// utils::AddSphereGeometry(funnel.get(), cp.mat_pp, grad, ramp_pos + ChVector<>(posx, posy, posz), ChQuaternion<>(1, 0, 0, 0), true);
+			AddSphere(id--,msystem,cp,grad,ramp_pos + ChVector<>(posx, posy, posz),ChQuaternion<>(1, 0, 0, 0),ChVector<>(0),ChVector<>(0),true,true);
 			j++;
 		}
 	}
 	// utils::AddCylinderGeometry(funnel.get(), cp.mat_pp, crad_body + cp.gdia, grad, body_pos + ChVector<>(0, cp.gdia, 0), ChQuaternion<>(1, 1, 0, 0), true);
 	// utils::AddCylinderGeometry(funnel.get(), cp.mat_pp, crad_body + cp.gdia, grad, body_pos + ChVector<>(0, cp.gdia, 0), Q_from_AngX(CH_C_PI/2.0), true);
-	funnel->GetCollisionModel()->BuildModel();
+	// funnel->GetCollisionModel()->BuildModel();
 
 	// msystem->AddBody(funnel);
 
@@ -491,7 +490,7 @@ std::pair<std::pair<size_t, size_t>,std::pair<size_t, size_t>> AddFunnel(ChSyste
 	ChVector<> splatform(size_platform/2.0,size_platform/2.0,cp.cthickness/2.0);
 
 	// AddWall(--id,msystem,cp,splatform,pplatform,true,true);
-	AddPlatform(msystem,cp,x_pos,y_pos,rad,--id);
+	AddPlatform(msystem,cp,x_pos,y_pos,rad,&id);
 	AddWall(--id,msystem,cp,sroof,proof,true,true);
 	AddWall(--id,msystem,cp,sbase,pbase,true,true);
 
@@ -778,6 +777,7 @@ int main(int argc, char* argv[]) {
 	double time_save = cp.time_save;
 	double threshold = 400;
 
+	
 	// Iterate through simulation. Calculate resultant forces and motion for each timestep
 	while (time < cp.sim_duration) {
 		// Start irrlicht visualization scene
@@ -795,6 +795,7 @@ int main(int argc, char* argv[]) {
 			
 			IncrementTimerTotals(msystem, &mstats,time);
 			if (time > cp.sim_duration) break;
+
 		}
 		
 		time_loop = time - cp.time_step + cp.time_loop;
@@ -815,8 +816,6 @@ int main(int argc, char* argv[]) {
 				return -1;
 			}
 			time_save += cp.time_save;
-
-
 		}
 	
 		// Calculate the average velocity of all particles and exit the loop if KE < threshold
@@ -825,7 +824,8 @@ int main(int argc, char* argv[]) {
 	}
 	
 	//LOOP 2 : Break the dam ! Release the river ! 
-	std::shared_ptr<ChBody> roof = msystem.SearchBodyID(-4);
+	// std::shared_ptr<ChBody> roof = msystem.SearchBodyID(-4);
+	std::shared_ptr<ChBody> roof = msystem.Get_bodylist().back();
 	roof->SetPos(ChVector<>(100,100,100));
 	std::vector<double> mass_rate_vector;
 	int nb_it_stucked=0;
@@ -881,6 +881,16 @@ int main(int argc, char* argv[]) {
 				break;
 			}
 
+			for (size_t i = glist.first; i < glist.first + mstats.num_particles; ++i) {
+				std::shared_ptr<ChBody> bead_tested = msystem.Get_bodylist().at(i);
+				ChVector<> pos_bead_tested=bead_tested->GetPos();
+				if (msystem.data_manager->host_data.active_rigid[bead_tested->GetId()] == 0){
+					bead_tested->SetPos_dt(ChVector<>(0));
+					bead_tested->SetRot_dt(QUNIT);
+					
+				}
+			}
+
 
 		}
 
@@ -929,7 +939,7 @@ int main(int argc, char* argv[]) {
 
 		// Calculate the average velocity of all particles and exit the loop if KE < threshold
 
-		// if(CalcAverageKE(msystem, cp.proj_path, mstats.num_particles, glist.first, time, threshold)) break;
+		if(CalcAverageKE(msystem, cp.proj_path, mstats.num_particles, glist.first, time, threshold)) break;
 
 		
 	}
