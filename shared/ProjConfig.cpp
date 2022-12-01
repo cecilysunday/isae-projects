@@ -383,6 +383,20 @@ int ComputeDerivedStuctValues(ConfigParameters* config, const std::string& dates
 		else config->ilength_r = config->ilength_x / 2.0;
 	}
 
+	if (config->proj_type=="repose"){
+		const std::string platform_size = std::to_string(config->platform_size).substr(0,std::to_string(config->platform_size).rfind(".")+3);;
+		const std::string grad = std::to_string(config->grad).substr(0,std::to_string(config->grad).rfind(".")+3);;
+		const std::string bead_rad_std= std::to_string(config->bead_rad_std).substr(0,std::to_string(config->bead_rad_std).rfind(".")+4);;
+		// double platform_size = std::ceil(config->platform_size * 100.0) / 100.0;
+		// double grad = std::ceil(config->grad * 100.0) / 100.0;
+		// double bead_rad_std = std::ceil(config->bead_rad_std * 100.0) / 100.0;
+   
+		// config->config_platform_file="config_platform_repose_"+std::to_string(platform_size)+"_r_"+std::to_string(grad)+"_std_"
+		// 	+std::to_string(bead_rad_std)+".txt";
+		config->config_platform_file="config_platform_repose_"+platform_size+"_r_"+grad+"_std_"
+			+bead_rad_std+".txt";
+	}
+
 
 
 	return 0;
@@ -480,6 +494,7 @@ int MapParameters(ConfigParameters& config, const std::vector<std::string>& pars
 	else if (param == "height_stem") config.height_stem= std::stod(val);
 	else if (param == "funnel_small_diameter") config.funnel_small_dia= std::stod(val);
 	else if (param == "funnel_large_diameter") config.funnel_large_dia= std::stod(val);
+	else if (param == "bead_rad_std") config.bead_rad_std= std::stod(val);
 
 	
 	else {

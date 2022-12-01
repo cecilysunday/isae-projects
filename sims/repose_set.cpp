@@ -285,7 +285,7 @@ std::pair<size_t, size_t> FillFunnel(ChSystemMulticoreSMC* msystem, const Config
 	// Create a generator for determining random radii following a normal distribution 
 	auto seed = std::chrono::system_clock::now().time_since_epoch().count();
 	std::default_random_engine generator((unsigned int)seed);
-	std::normal_distribution<double> distribution(cp.grad, cp.gmarg / 4.0);
+	std::normal_distribution<double> distribution(cp.grad, cp.bead_rad_std);
 
 	// Construct particle lattice cloud
 	// for (int iz = 0; iz < numz; ++iz) {
@@ -327,9 +327,38 @@ std::pair<size_t, size_t> FillFunnel(ChSystemMulticoreSMC* msystem, const Config
 	return glist;
 }
 
+void AddPlatform(ChSystemMulticoreSMC* msystem, const ConfigParameters &cp, 
+	std::vector<double> x_pos, std::vector<double> y_pos,std::vector<double> rad,int id){
+
+	int n=x_pos.size();
+
+	// Add platform
+	auto platform= std::shared_ptr<ChBody>(msystem->NewBody());
+	platform->SetIdentifier(--id);
+	platform->SetMass(cp.cmass);
+	platform->SetBodyFixed(true);
+	platform->SetCollide(true);
+	platform->SetIdentifier(id);
+
+	platform->GetCollisionModel()->ClearModel();
+
+	for(int i=0;i<n;i++){
+		double x = x_pos[i];
+		double y = y_pos[i];
+		double radius = rad[i];
+		utils::AddSphereGeometry(platform.get(), cp.mat_pp, radius, ChVector<>(x, y, 0), ChQuaternion<>(1, 0, 0, 0), true);
+
+
+	}
+
+	platform->GetCollisionModel()->BuildModel();
+
+	msystem->AddBody(platform);
+	}
+
 
 std::pair<std::pair<size_t, size_t>,std::pair<size_t, size_t>> AddFunnel(ChSystemMulticoreSMC* msystem, const ConfigParameters &cp, 
-	ParticleData* data, size_t num_objects, bool rerun) {
+	ParticleData* data, size_t num_objects, std::vector<double> x_pos, std::vector<double> y_pos,std::vector<double> rad,bool rerun) {
 	// Get start index and if of the wall list. If this is a re-run, some information was already 
 	// added for the funnel during re-import. Delete that information so that i can be replaced correctly.
 	// const std::shared_ptr<ChBody> wall = msystem->Get_bodylist().at(msystem->Get_bodylist().size() - 1);
@@ -461,7 +490,8 @@ std::pair<std::pair<size_t, size_t>,std::pair<size_t, size_t>> AddFunnel(ChSyste
 	ChVector<> sroof(1.25*crad_body,1.25*crad_body,cp.cthickness/2.0);
 	ChVector<> splatform(size_platform/2.0,size_platform/2.0,cp.cthickness/2.0);
 
-	AddWall(--id,msystem,cp,splatform,pplatform,true,true);
+	// AddWall(--id,msystem,cp,splatform,pplatform,true,true);
+	AddPlatform(msystem,cp,x_pos,y_pos,rad,--id);
 	AddWall(--id,msystem,cp,sroof,proof,true,true);
 	AddWall(--id,msystem,cp,sbase,pbase,true,true);
 
@@ -589,6 +619,8 @@ double mass_rate(ChSystemMulticoreSMC &msystem, const ConfigParameters& cp,std::
 	return total_mass;
 }
 
+
+
 int main(int argc, char* argv[]) {
 	// Print Chrono version to userlog
 	GetLog() << "\nCopyright (c) 2017 projectchrono.org\nChrono version: " << CHRONO_VERSION << "\n";
@@ -612,6 +644,50 @@ int main(int argc, char* argv[]) {
 		return -1;
 	}
 
+
+	const std::string cfolder = cfile.substr(0,cfile.rfind("/")+1);
+	const std::string path_platform_config_file = cfolder+cp.config_platform_file;
+	std::cout<<"cfolder = "<<path_platform_config_file<<"\n";
+
+	std::ifstream file(path_platform_config_file);
+	if (!file) {
+		fprintf(stderr, "\nERR: Platform file does not exist!\n");
+		return -1;
+	}
+	std::string line;
+	std::vector<double> platform_x_pos, platform_y_pos,platform_rad;
+	while (std::getline(file, line)) {
+		// Ignore empy line or lines that start with #. Otherwise, parse words.
+		if (line.empty()) continue;
+
+		// Parse each line into a vector of words
+		std::vector<std::string> parsed_line;
+		std::vector<std::string> parsed_word;
+
+		char* cline = const_cast<char*>(line.c_str());
+		char* delim = strtok(cline, " ");
+		while (delim != NULL) {
+			std::string parsed_word(delim);
+			parsed_line.push_back(parsed_word);
+			delim = strtok(NULL, " ");
+			// std::cout<<"delim = "<<delim<<"\n";
+		}
+		if (parsed_line.size() != 3) {
+			std::cout<<"Problem for reading platform file \n"; 
+			return -1;
+		}
+
+		platform_x_pos.push_back(std::stod(parsed_line[0]));
+		platform_y_pos.push_back(std::stod(parsed_line[1]));
+		platform_rad.push_back(std::stod(parsed_line[2]));
+
+	}
+	std::cout<<"taille x_pos"<<platform_x_pos.size()<<"\n";
+	for (int i=0;i<platform_x_pos.size();i++){
+		std::cout<<"x_pos="<<platform_x_pos[i]<<"\n";
+		std::cout<<"y_pos="<<platform_y_pos[i]<<"\n";
+		std::cout<<"rad="<<platform_rad[i]<<"\n";
+	}
 	// Create a Multicore SMC system and set the system parameters
 	ChSystemMulticoreSMC msystem;
 	if (SetSimulationParameters(&msystem, cp) != 0) {
@@ -639,7 +715,8 @@ int main(int argc, char* argv[]) {
 
 	// Add the shadowbox to the simulation. If this is a sim reboot, reconstruct the previous scene
 	// std::pair<size_t, size_t> wlist = CreateContainer(&msystem, cp, istate_data, num_imported, rerun);
-	std::pair<std::pair<size_t, size_t>,std::pair<size_t, size_t>> lists = AddFunnel(&msystem, cp, istate_data, num_imported, rerun);
+	std::pair<std::pair<size_t, size_t>,std::pair<size_t, size_t>> lists = AddFunnel(&msystem, cp, istate_data, num_imported, 
+		platform_x_pos,platform_y_pos,platform_rad,rerun);
 	std::pair<size_t, size_t> glist=lists.first;
 	std::pair<size_t, size_t> wlist=lists.second;
 	std::cout<<"wlist = ("<<wlist.first<<","<<wlist.second<<"), glist = ("<<glist.first<<","<<glist.second<<") \n";
@@ -880,7 +957,7 @@ int main(int argc, char* argv[]) {
 		<<" \n "<< "platform size "<<cp.platform_size
 		<<" \n "<< "bead diameter "<<cp.gdia
 		<<" \n "<< "bead diameter mean "<<cp.gdia
-		<<" \n "<< "bead diameter standard deviation"<<cp.gmarg / 4.0;
+		<<" \n "<< "bead diameter standard deviation"<<cp.bead_rad_std;
 
 
 
