@@ -476,11 +476,11 @@ std::pair<std::pair<size_t, size_t>,std::pair<size_t, size_t>> AddFunnel(ChSyste
 	// utils::AddCylinderGeometry(funnel.get(), cp.mat_pp, crad_body + cp.gdia, grad, body_pos + ChVector<>(0, cp.gdia, 0), Q_from_AngX(CH_C_PI/2.0), true);
 	funnel->GetCollisionModel()->BuildModel();
 
-	msystem->AddBody(funnel);
+	// msystem->AddBody(funnel);
 
 	msystem->GetSettings()->collision.use_aabb_active = true;
-	msystem->GetSettings()->collision.aabb_min = real3(-4 * size_platform, -4 * size_platform, -dist_funnel_platform);
-	msystem->GetSettings()->collision.aabb_max = real3(4 * size_platform, 4 * size_platform, *cyl_height*3+dist_funnel_platform+shgt+height);
+	msystem->GetSettings()->collision.aabb_min = real3(-10000 * size_platform, -10000 * size_platform, -dist_funnel_platform);
+	msystem->GetSettings()->collision.aabb_max = real3(10000 * size_platform, 10000 * size_platform, *cyl_height*3+dist_funnel_platform+shgt+height);
 
 	ChVector<> pbase(0,0,dist_funnel_platform+cp.cthickness/2.0);
 	ChVector<> proof(0,0,*cyl_height+cp.cthickness/2.0);
@@ -612,13 +612,28 @@ double mass_rate(ChSystemMulticoreSMC &msystem, const ConfigParameters& cp,std::
 		std::shared_ptr<ChBody> bead_tested = msystem.Get_bodylist().at(i);
 		ChVector<> pos_bead_tested=bead_tested->GetPos();
 
-		if (pos_bead_tested.z()<=cp.dist_funnel_platform+cp.height_stem && pos_bead_tested.z()>=cp.dist_funnel_platform){
+		if (abs(pos_bead_tested.z()-cp.dist_funnel_platform-cp.height_stem/2.0)<=cp.height_stem/2.0 && 
+			(pow(pos_bead_tested.x(),2)+pow(pos_bead_tested.y(),2)<=pow(cp.funnel_small_dia/2.0,2))){
 			total_mass+=bead_tested->GetMass();
 		}
 	}
 	return total_mass;
 }
 
+bool detect_beads_in_funnel(ChSystemMulticoreSMC &msystem, const ConfigParameters& cp,std::pair<size_t, size_t> glist, int num_particles){
+	bool beads_in_funnel= false;
+	for (size_t i = glist.first; i < glist.first + num_particles; ++i) {
+		std::shared_ptr<ChBody> bead_tested = msystem.Get_bodylist().at(i);
+		ChVector<> pos_bead_tested=bead_tested->GetPos();
+
+		if (pos_bead_tested.z()>cp.dist_funnel_platform && 
+			(pow(pos_bead_tested.x(),2)+pow(pos_bead_tested.y(),2)<=pow(cp.funnel_large_dia/2.0,2))){
+			beads_in_funnel=true;
+			break;
+		}
+	}
+	return beads_in_funnel;
+}
 
 
 int main(int argc, char* argv[]) {
@@ -860,7 +875,8 @@ int main(int argc, char* argv[]) {
 			
 			std::cout<<"Nb beads stopped = "<<nb_bead_stopped<<"\n";
 			if (nb_bead_stopped>=mstats.num_particles) break;
-			if (nb_it_stucked>=it_max_stucked){
+			if (nb_it_stucked>=it_max_stucked && detect_beads_in_funnel(msystem,cp,glist,mstats.num_particles)){
+				std::cout<<"Beads in funnel ? "<<detect_beads_in_funnel(msystem,cp,glist,mstats.num_particles)<<"\n";
 				stucked=true;
 				break;
 			}
