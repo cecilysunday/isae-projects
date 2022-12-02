@@ -697,11 +697,11 @@ int main(int argc, char* argv[]) {
 
 	}
 	std::cout<<"taille x_pos"<<platform_x_pos.size()<<"\n";
-	for (int i=0;i<platform_x_pos.size();i++){
-		std::cout<<"x_pos="<<platform_x_pos[i]<<"\n";
-		std::cout<<"y_pos="<<platform_y_pos[i]<<"\n";
-		std::cout<<"rad="<<platform_rad[i]<<"\n";
-	}
+	// for (int i=0;i<platform_x_pos.size();i++){
+	// 	std::cout<<"x_pos="<<platform_x_pos[i]<<"\n";
+	// 	std::cout<<"y_pos="<<platform_y_pos[i]<<"\n";
+	// 	std::cout<<"rad="<<platform_rad[i]<<"\n";
+	// }
 	// Create a Multicore SMC system and set the system parameters
 	ChSystemMulticoreSMC msystem;
 	if (SetSimulationParameters(&msystem, cp) != 0) {
