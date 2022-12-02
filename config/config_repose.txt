@@ -47,7 +47,7 @@ angle_funnel 60
 height_stem 10
 funnel_small_diameter 10
 funnel_large_diameter 50
-platform_size 50
+platform_size 10
 bead_rad_std 0.2
 
 

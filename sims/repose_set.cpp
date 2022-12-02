@@ -73,8 +73,8 @@ ChVector<> RotatePoint(ChVector<> pivot, double theta, ChVector<> point) {
 }
 
 
-void AddSphere(int id, ChSystemMulticoreSMC* msystem, const ConfigParameters &cp, double radius, 
-	ChVector<> pos, ChQuaternion<> rot, ChVector<> init_v, ChVector<> init_w, bool collide, bool iswall) {
+void AddSphere(int id, ChSystemMulticoreSMC* msystem, const ConfigParameters& cp,
+	double radius, ChVector<> pos, ChVector<> init_v,bool iswall) {
 	// Shared parameters for the falling ball
 	double mass = cp.grho * (4.0 / 3.0) * CH_C_PI * pow(radius, 3.0);
 	ChVector<> inertia = 0.4 * mass * pow(radius, 2.0) * ChVector<>(1, 1, 1);
@@ -84,12 +84,17 @@ void AddSphere(int id, ChSystemMulticoreSMC* msystem, const ConfigParameters &cp
 	body->SetIdentifier(id);
 	body->SetMass(mass);
 	body->SetPos(pos);
-	body->SetRot(rot);
-	body->SetPos_dt(init_v);
-	body->SetWvel_par(init_w);
+	body->SetRot(QUNIT);
+	if (iswall){
+		body->SetPos_dt(ChVector<>(0,0,0));
+	}
+	else{
+		body->SetPos_dt(init_v);
+	}
+	body->SetWvel_par(VNULL);
 	body->SetInertiaXX(inertia);
 	body->SetBodyFixed(iswall);
-	body->SetCollide(collide);
+	body->SetCollide(true);
 
 
 	body->GetCollisionModel()->ClearModel();
@@ -111,7 +116,7 @@ void AddSphere(int id, ChSystemMulticoreSMC* msystem, const ConfigParameters &cp
 
 
 void AddWall(int id, ChSystemMulticoreSMC* msystem, const ConfigParameters &cp,
-	ChVector<> size, ChVector<> pos, bool vis, bool collide) {
+	ChVector<> size, ChVector<> pos, bool vis) {
 	// Create container walls. Set parameters and collision model.
 	auto body = std::shared_ptr<ChBody>(msystem->NewBody());
 	body->SetIdentifier(id);
@@ -119,7 +124,7 @@ void AddWall(int id, ChSystemMulticoreSMC* msystem, const ConfigParameters &cp,
 	body->SetPos(pos);
 	body->SetRot(QUNIT);
 	body->SetBodyFixed(true);
-	body->SetCollide(collide);
+	body->SetCollide(true);
 
 	body->GetCollisionModel()->ClearModel();
 	utils::AddBoxGeometry(body.get(), cp.mat_pw, size, VNULL, QUNIT, vis);
@@ -135,7 +140,6 @@ void AddWall(int id, ChSystemMulticoreSMC* msystem, const ConfigParameters &cp,
 
 	// Add the wall to the system
 	msystem->AddBody(body);
-
 }
 
 
@@ -163,7 +167,7 @@ std::pair<size_t, size_t> RecreateParticles(ChSystemMulticoreSMC* msystem, const
 		// if (iswall && (pos.y() < cp.cmisc)) collide = false;
 		if (iswall && (pos.y() < cp.clength_y)) collide = false;
 
-		if (realnum) AddSphere(data[i].id, msystem, cp, data[i].radius, pos, rot, init_v, init_w, collide, iswall);
+		if (realnum) AddSphere(data[i].id, msystem, cp, data[i].radius, pos, init_v,iswall);
 	}
 
 	// Find and return index range of the particle list 
@@ -220,9 +224,9 @@ void AddRoughness(ChSystemMulticoreSMC* msystem, const ConfigParameters &cp, ChV
 		if (lid) {
 			ChVector<> temp_posi = posif - nozzel_center;
 			double temp_radi = Sqrt(temp_posi.x() * temp_posi.x() + temp_posi.z() * temp_posi.z());
-			if (temp_radi > nrad) AddSphere(--id, msystem, cp, radi, posif, rot, init_v, init_w, collide, true);
+			if (temp_radi > nrad) AddSphere(--id, msystem, cp, radi, posif, init_v, true);
 		}
-		else AddSphere(--id, msystem, cp, radi, posif, rot, init_v, init_w, collide, true);
+		else AddSphere(--id, msystem, cp, radi, posif, init_v, true);
 
 		// Create particles to the right and left of the initial sphere 
 		for (int ix = 1; ix < numx / 2; ++ix) {
@@ -237,15 +241,15 @@ void AddRoughness(ChSystemMulticoreSMC* msystem, const ConfigParameters &cp, ChV
 			if (lid) {
 				ChVector<> temp_posr = posrf - nozzel_center;
 				double temp_radr = Sqrt(temp_posr.x() * temp_posr.x() + temp_posr.z() * temp_posr.z());
-				if (temp_radr > nrad) AddSphere(--id, msystem, cp, radr, posr, rot, init_v, init_w, collide, true);
+				if (temp_radr > nrad) AddSphere(--id, msystem, cp, radr, posr, init_v, true);
 
 				ChVector<> temp_posl = poslf - nozzel_center;
 				double temp_radl = Sqrt(temp_posl.x() * temp_posl.x() + temp_posl.z() * temp_posl.z());
-				if (temp_radl > nrad) AddSphere(--id, msystem, cp, radl, posl, rot, init_v, init_w, collide, true);
+				if (temp_radl > nrad) AddSphere(--id, msystem, cp, radl, posl, init_v,  true);
 			}
 			else {
-				AddSphere(--id, msystem, cp, radr, posrf, rot, init_v, init_w, collide, true);
-				AddSphere(--id, msystem, cp, radl, poslf, rot, init_v, init_w, collide, true);
+				AddSphere(--id, msystem, cp, radr, posrf,  init_v,  true);
+				AddSphere(--id, msystem, cp, radl, poslf,  init_v,  true);
 			}
 		}
 	}
@@ -311,7 +315,7 @@ std::pair<size_t, size_t> FillFunnel(ChSystemMulticoreSMC* msystem, const Config
 				ChVector<> temp_pos = pos_next - cpos;
 				double temp_rad = Sqrt(temp_pos.x() * temp_pos.x() + temp_pos.y() * temp_pos.y());
 				if (temp_rad <= orad) {
-					AddSphere(id++, msystem, cp, distribution(generator), pos_next, rot, ChRandomXYZ(cp.gvel), init_w, true, false);
+					AddSphere(id++, msystem, cp, distribution(generator), pos_next, ChRandomXYZ(cp.gvel), false);
 					// AddSphere(id++, msystem, cp, distribution(generator), pos_next, rot, ChRandomXYZ(1.0E2), init_w, false, false);
 					n_particles+=1;
 					// std::cout<<"n_particles = "<<n_particles<<"\n";
@@ -339,7 +343,7 @@ void AddPlatform(ChSystemMulticoreSMC* msystem, const ConfigParameters &cp,
 		double y = y_pos[i];
 		double radius = rad[i];
 		// utils::AddSphereGeometry(platform.get(), cp.mat_pp, radius, ChVector<>(x, y, 0), ChQuaternion<>(1, 0, 0, 0), true);
-		AddSphere(*id--,msystem,cp,cp.grad,ChVector<>(x, y, 0),ChQuaternion<>(1, 0, 0, 0),ChVector<>(0),ChVector<>(0),true,true);
+		AddSphere(*id--,msystem,cp,cp.grad,ChVector<>(x, y, 0),ChVector<>(0),true);
 
 	}
 	}
@@ -412,7 +416,7 @@ std::pair<std::pair<size_t, size_t>,std::pair<size_t, size_t>> AddFunnel(ChSyste
 
 	// funnel->GetCollisionModel()->ClearModel();
  
-  
+	/*	
 	for (int i = 0; i < numd_stem; ++i) {
 		for (int j = 0; j < numh_stem; ++j) {
 			int add_sft = 0;
@@ -423,9 +427,10 @@ std::pair<std::pair<size_t, size_t>,std::pair<size_t, size_t>> AddFunnel(ChSyste
 			double posy = crad_stem * cos(theta_stem * i + theta_stem / 2.0 * add_sft);
 			stem_pos = npos + ChVector<>(0,0, posz);
 			// utils::AddSphereGeometry(funnel.get(), cp.mat_pp, grad, npos + ChVector<>(posx, posy, posz), ChQuaternion<>(1, 0, 0, 0), true);
-			AddSphere(id--,msystem,cp,grad,npos + ChVector<>(posx, posy, posz),ChQuaternion<>(1, 0, 0, 0),ChVector<>(0),ChVector<>(0),true,true);
+			AddSphere(id--,msystem,cp,grad,npos + ChVector<>(posx, posy, posz),ChVector<>(0),true);
 		}
 	}
+	
 	double ramp_pos_estim=cp.dist_funnel_platform+(numh_stem-1)*sftz+grad;
 	std::cout<<"stem_pos fin 1ere boucle = "<<stem_pos.z()<<", estim = "<<ramp_pos_estim<<"\n";
 	for (int i = 1; i < numl_ramp; ++i) {
@@ -442,16 +447,18 @@ std::pair<std::pair<size_t, size_t>,std::pair<size_t, size_t>> AddFunnel(ChSyste
 			double posy = crad_ramp * cos(j*theta_ramp + theta_ramp / 2.0);
 			ramp_pos = stem_pos + ChVector<>(0,0,posz + 2.0 * grad * cos(rang));
 			// utils::AddSphereGeometry(funnel.get(), cp.mat_pp, grad, stem_pos + ChVector<>(posx, posy, posz), ChQuaternion<>(1, 0, 0, 0), true);
-			AddSphere(id--,msystem,cp,grad,stem_pos + ChVector<>(posx, posy, posz),ChQuaternion<>(1, 0, 0, 0),ChVector<>(0),ChVector<>(0),true,true);
+			AddSphere(id--,msystem,cp,grad,stem_pos + ChVector<>(posx, posy, posz),ChVector<>(0),true);
 		}
 	}
+	
 	ramp_pos_estim+=2.0*grad*sin(rang)*(numl_ramp-1)+2.0*grad*cos(rang);
 	std::cout<<"ramp_pos.z() à la fin : "<<ramp_pos.z()<<", estimation = "<<ramp_pos_estim<<"\n";
 
 
-
+	
 	std::cout<<"Final height = "<<*cyl_height<<"\n";
 	*cyl_height+=4*cp.grad;
+	
 	double numh_body = round((*cyl_height - 2.0 * grad) / sftz + 1);				/// Num particles needed to preserve the funnel body height
 	
 	double posz=0;
@@ -469,20 +476,22 @@ std::pair<std::pair<size_t, size_t>,std::pair<size_t, size_t>> AddFunnel(ChSyste
 			double posy = crad_body * cos(i*theta_body + theta_body / 2.0 * add_sft);
 			body_pos = ramp_pos + ChVector<>(0, posz, 0);
 			// utils::AddSphereGeometry(funnel.get(), cp.mat_pp, grad, ramp_pos + ChVector<>(posx, posy, posz), ChQuaternion<>(1, 0, 0, 0), true);
-			AddSphere(id--,msystem,cp,grad,ramp_pos + ChVector<>(posx, posy, posz),QUNIT,ChVector<>(0),ChVector<>(0),true,true);
+			AddSphere(id--,msystem,cp,grad,ramp_pos + ChVector<>(posx, posy, posz),ChVector<>(0),true);
 			j++;
 		}
-	}
+	}*/
 	// utils::AddCylinderGeometry(funnel.get(), cp.mat_pp, crad_body + cp.gdia, grad, body_pos + ChVector<>(0, cp.gdia, 0), ChQuaternion<>(1, 1, 0, 0), true);
 	// utils::AddCylinderGeometry(funnel.get(), cp.mat_pp, crad_body + cp.gdia, grad, body_pos + ChVector<>(0, cp.gdia, 0), Q_from_AngX(CH_C_PI/2.0), true);
 	// funnel->GetCollisionModel()->BuildModel();
 
 	// msystem->AddBody(funnel);
   
+	
 	msystem->GetSettings()->collision.use_aabb_active = true;
 	msystem->GetSettings()->collision.aabb_min = real3(-10000 * size_platform, -10000 * size_platform, -dist_funnel_platform);
 	msystem->GetSettings()->collision.aabb_max = real3(10000 * size_platform, 10000 * size_platform, *cyl_height*3+dist_funnel_platform+shgt+height);
 
+	/* Adding the standard platform and walls
 	ChVector<> pbase(0,0,dist_funnel_platform+cp.cthickness/2.0);
 	ChVector<> proof(0,0,*cyl_height+cp.cthickness/2.0);
 	ChVector<> pplatform(0,0,-cp.cthickness/2.0);
@@ -493,8 +502,37 @@ std::pair<std::pair<size_t, size_t>,std::pair<size_t, size_t>> AddFunnel(ChSyste
 
 	// AddWall(--id,msystem,cp,splatform,pplatform,true,true);
 	AddPlatform(msystem,cp,x_pos,y_pos,rad,&id);
-	AddWall(--id,msystem,cp,sroof,proof,true,true);
-	AddWall(--id,msystem,cp,sbase,pbase,true,true);
+	AddWall(--id,msystem,cp,sroof,proof,true);
+	AddWall(--id,msystem,cp,sbase,pbase,true);
+	*/
+	// *cyl_height+=4*cp.grad;
+	double size_z = *cyl_height+4*cp.grad-dist_funnel_platform;
+
+
+	ChVector<> pbase(0,0,dist_funnel_platform-cp.cthickness/2.0);
+	ChVector<> proof(0,0,*cyl_height+4*cp.grad+cp.cthickness/2.0);
+	ChVector<> pleft(-cp.cthickness/2.0-cp.funnel_large_dia/2.0,0,dist_funnel_platform+size_z/2.0);
+	ChVector<> pright(cp.cthickness/2.0+cp.funnel_large_dia/2.0,0,dist_funnel_platform+size_z/2.0);
+	ChVector<> pfront(0,-cp.cthickness/2.0-cp.funnel_large_dia/2.0,dist_funnel_platform+size_z/2.0);
+	ChVector<> pback(0,cp.cthickness/2.0+cp.funnel_large_dia/2.0,dist_funnel_platform+size_z/2.0);
+	
+	ChVector<> sbase(cp.funnel_large_dia/2.0,cp.funnel_large_dia/2.0,cp.cthickness/2.0);
+	ChVector<> sroof(cp.funnel_large_dia/2.0,cp.funnel_large_dia/2.0,cp.cthickness/2.0);
+	ChVector<> sleft(cp.cthickness/2.0,cp.funnel_large_dia/2.0,size_z/2.0);
+	ChVector<> sright(cp.cthickness/2.0,cp.funnel_large_dia/2.0,size_z/2.0);
+	ChVector<> sfront(cp.funnel_large_dia/2.0,cp.cthickness/2.0,size_z/2.0);
+	ChVector<> sback(cp.funnel_large_dia/2.0,cp.cthickness/2.0,size_z/2.0);
+
+	bool vis=false;
+
+	AddWall(id--,msystem,cp,sbase,pbase,vis);
+	AddWall(id--,msystem,cp,sroof,proof,vis);
+	AddWall(id--,msystem,cp,sleft,pleft,vis);
+	AddWall(id--,msystem,cp,sright,pright,vis);
+	AddWall(id--,msystem,cp,sback,pback,vis);
+	AddWall(id--,msystem,cp,sfront,pfront,vis);
+
+
 
 	wlist.second = msystem->Get_bodylist().size() - 1;
 	std::pair<std::pair<size_t, size_t>,std::pair<size_t, size_t>> to_return;
@@ -570,19 +608,19 @@ std::pair<size_t, size_t> CreateContainer(ChSystemMulticoreSMC* msystem, const C
 	// AddWall(--id, msystem, cp, sz_ramp, pos_ramp_l, rot_ramp_l, true, true);
 	// AddWall(--id, msystem, cp, sz_ramp, pos_ramp_r, rot_ramp_r, true, true);
 	
-	AddWall(--id, msystem, cp, sz_lid, pos_lid, false,false);
-	AddWall(--id, msystem, cp, sz_base, pos_base, false,false);
-	AddWall(--id, msystem, cp, sz_side, pos_side_l,false,false);
-	AddWall(--id, msystem, cp, sz_side, pos_side_r,false,false);
-	AddWall(--id, msystem, cp, sz_face, pos_side_f, false,false);
-	AddWall(--id, msystem, cp, sz_face, pos_side_b,false,false);
+	AddWall(--id, msystem, cp, sz_lid, pos_lid, false);
+	AddWall(--id, msystem, cp, sz_base, pos_base, false);
+	AddWall(--id, msystem, cp, sz_side, pos_side_l,false);
+	AddWall(--id, msystem, cp, sz_side, pos_side_r,false);
+	AddWall(--id, msystem, cp, sz_face, pos_side_f, false);
+	AddWall(--id, msystem, cp, sz_face, pos_side_b,false);
 	
-	AddWall(--id, msystem, cp, sz_sprt, pos_wall_m,false,false);
-	AddWall(--id, msystem, cp, sz_wall, pos_wall_l,false,false);
-	AddWall(--id, msystem, cp, sz_wall, pos_wall_r,false,false);
+	AddWall(--id, msystem, cp, sz_sprt, pos_wall_m,false);
+	AddWall(--id, msystem, cp, sz_wall, pos_wall_l,false);
+	AddWall(--id, msystem, cp, sz_wall, pos_wall_r,false);
 	
-	AddWall(--id, msystem, cp, sz_ramp, pos_ramp_l,false,false);
-	AddWall(--id, msystem, cp, sz_ramp, pos_ramp_r,false,false);
+	AddWall(--id, msystem, cp, sz_ramp, pos_ramp_l,false);
+	AddWall(--id, msystem, cp, sz_ramp, pos_ramp_r,false);
 
 	// Add the particles that are glued to the walls of the container
 	if (rerun) std::pair<size_t, size_t> pwlist = RecreateParticles(msystem, cp, data, num_objects, true);
@@ -769,7 +807,7 @@ int main(int argc, char* argv[]) {
 	application->Initialize();
 	application->AddTypicalLights();
 	application->AddSkyBox();
-	application->AddCamera(ChVector<>(0, 40, 0), ChVector<>(0,0,0));
+	application->AddCamera(ChVector<>(80, 80, cp.dist_funnel_platform/2.0+cp.height_stem/2.0), ChVector<>(0,0,cp.dist_funnel_platform/2.0+cp.height_stem/2.0));
 	application->AddLight(ChVector<>(0, cp.clength_z * 2, cp.clength_z), cp.clength_z * 2);
 	#endif
 
@@ -783,12 +821,12 @@ int main(int argc, char* argv[]) {
 	// Iterate through simulation. Calculate resultant forces and motion for each timestep
 	while (time < cp.sim_duration) {
 		// Start irrlicht visualization scene
-		/*#ifdef CHRONO_IRRLICHT
+		#ifdef CHRONO_IRRLICHT
 		application->BeginScene();
 		application->Render();
 		application->GetDevice()->run();
 		application->EndScene();
-		#endif*/
+		#endif
 		
 		// Calculate dynamics for (cp.out_step / time_step.cp) continuous steps. Create new particles according to the fill_step interval
 		while (time < time_loop) {
