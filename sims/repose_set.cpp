@@ -311,7 +311,7 @@ std::pair<size_t, size_t> FillFunnel(ChSystemMulticoreSMC* msystem, const Config
 				ChVector<> temp_pos = pos_next - cpos;
 				double temp_rad = Sqrt(temp_pos.x() * temp_pos.x() + temp_pos.y() * temp_pos.y());
 				if (temp_rad <= orad) {
-					AddSphere(id++, msystem, cp, distribution(generator), pos_next, rot, ChRandomXYZ(1.0E2), init_w, true, false);
+					AddSphere(id++, msystem, cp, distribution(generator), pos_next, rot, ChRandomXYZ(cp.gvel), init_w, true, false);
 					// AddSphere(id++, msystem, cp, distribution(generator), pos_next, rot, ChRandomXYZ(1.0E2), init_w, false, false);
 					n_particles+=1;
 					// std::cout<<"n_particles = "<<n_particles<<"\n";
@@ -411,6 +411,8 @@ std::pair<std::pair<size_t, size_t>,std::pair<size_t, size_t>> AddFunnel(ChSyste
 	// funnel->SetCollide(true);
 
 	// funnel->GetCollisionModel()->ClearModel();
+ 
+  
 	for (int i = 0; i < numd_stem; ++i) {
 		for (int j = 0; j < numh_stem; ++j) {
 			int add_sft = 0;
@@ -467,7 +469,7 @@ std::pair<std::pair<size_t, size_t>,std::pair<size_t, size_t>> AddFunnel(ChSyste
 			double posy = crad_body * cos(i*theta_body + theta_body / 2.0 * add_sft);
 			body_pos = ramp_pos + ChVector<>(0, posz, 0);
 			// utils::AddSphereGeometry(funnel.get(), cp.mat_pp, grad, ramp_pos + ChVector<>(posx, posy, posz), ChQuaternion<>(1, 0, 0, 0), true);
-			AddSphere(id--,msystem,cp,grad,ramp_pos + ChVector<>(posx, posy, posz),ChQuaternion<>(1, 0, 0, 0),ChVector<>(0),ChVector<>(0),true,true);
+			AddSphere(id--,msystem,cp,grad,ramp_pos + ChVector<>(posx, posy, posz),QUNIT,ChVector<>(0),ChVector<>(0),true,true);
 			j++;
 		}
 	}
@@ -476,7 +478,7 @@ std::pair<std::pair<size_t, size_t>,std::pair<size_t, size_t>> AddFunnel(ChSyste
 	// funnel->GetCollisionModel()->BuildModel();
 
 	// msystem->AddBody(funnel);
-
+  
 	msystem->GetSettings()->collision.use_aabb_active = true;
 	msystem->GetSettings()->collision.aabb_min = real3(-10000 * size_platform, -10000 * size_platform, -dist_funnel_platform);
 	msystem->GetSettings()->collision.aabb_max = real3(10000 * size_platform, 10000 * size_platform, *cyl_height*3+dist_funnel_platform+shgt+height);
@@ -697,11 +699,11 @@ int main(int argc, char* argv[]) {
 
 	}
 	std::cout<<"taille x_pos"<<platform_x_pos.size()<<"\n";
-	// for (int i=0;i<platform_x_pos.size();i++){
-	// 	std::cout<<"x_pos="<<platform_x_pos[i]<<"\n";
-	// 	std::cout<<"y_pos="<<platform_y_pos[i]<<"\n";
-	// 	std::cout<<"rad="<<platform_rad[i]<<"\n";
-	// }
+	for (int i=0;i<platform_x_pos.size();i++){
+	 	std::cout<<"x_pos="<<platform_x_pos[i]<<"\n";
+	 	std::cout<<"y_pos="<<platform_y_pos[i]<<"\n";
+	 	std::cout<<"rad="<<platform_rad[i]<<"\n";
+	}
 	// Create a Multicore SMC system and set the system parameters
 	ChSystemMulticoreSMC msystem;
 	if (SetSimulationParameters(&msystem, cp) != 0) {
@@ -781,12 +783,12 @@ int main(int argc, char* argv[]) {
 	// Iterate through simulation. Calculate resultant forces and motion for each timestep
 	while (time < cp.sim_duration) {
 		// Start irrlicht visualization scene
-		#ifdef CHRONO_IRRLICHT
+		/*#ifdef CHRONO_IRRLICHT
 		application->BeginScene();
 		application->Render();
 		application->GetDevice()->run();
 		application->EndScene();
-		#endif
+		#endif*/
 		
 		// Calculate dynamics for (cp.out_step / time_step.cp) continuous steps. Create new particles according to the fill_step interval
 		while (time < time_loop) {
@@ -810,21 +812,26 @@ int main(int argc, char* argv[]) {
 		// #endif
 
 		// Save and write data every (cp.save_step / time_step.cp) steps 
+
 		if (time > time_save) {
-			if (ArchiveState(msystem, mstats, cp.proj_path, mstats.num_particles, glist.first, time) != 0) {
+			/*
+      if (ArchiveState(msystem, mstats, cp.proj_path, mstats.num_particles, glist.first, time) != 0) {
 				fprintf(stderr, "\nERR: Error archiving run-time data \n");
 				return -1;
 			}
+      */
 			time_save += cp.time_save;
 		}
 	
 		// Calculate the average velocity of all particles and exit the loop if KE < threshold
-		if(CalcAverageKE(msystem, cp.proj_path, mstats.num_particles, glist.first, time, threshold)) break;
+		//if(CalcAverageKE(msystem, cp.proj_path, mstats.num_particles, glist.first, time, threshold)) break;
+   std::cout<<"Fin iteration \n";
 		
 	}
 	
 	//LOOP 2 : Break the dam ! Release the river ! 
 	// std::shared_ptr<ChBody> roof = msystem.SearchBodyID(-4);
+  
 	std::shared_ptr<ChBody> roof = msystem.Get_bodylist().back();
 	roof->SetPos(ChVector<>(100,100,100));
 	std::vector<double> mass_rate_vector;
