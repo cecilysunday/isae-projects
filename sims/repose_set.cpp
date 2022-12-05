@@ -461,8 +461,8 @@ std::pair<std::pair<size_t, size_t>,std::pair<size_t, size_t>> AddFunnel(ChSyste
 	double height=cp.dist_funnel_platform+(numh_stem-1)*sftz+grad+2.0*grad*sin(rang)*(numl_ramp-1)+2.0*grad*cos(rang);
 	double* cyl_height=&height;
 	std::pair<size_t, size_t> glist;
-	glist = FillFunnel(msystem, cp, crad_body, nb_particles,cyl_height,ChVector<>(0,0,height));
-	// glist = FillFunnel_setbox(msystem, cp, nb_particles,cyl_height);
+	//glist = FillFunnel(msystem, cp, crad_body, nb_particles,cyl_height,ChVector<>(0,0,height));
+	glist = FillFunnel_setbox(msystem, cp, nb_particles,cyl_height);
 	std::pair<size_t, size_t> wlist;
 	wlist.first = msystem->Get_bodylist().size();
 	std::cout<<"Test \n";
