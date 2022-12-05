@@ -331,7 +331,7 @@ std::pair<size_t, size_t> FillFunnel(ChSystemMulticoreSMC* msystem, const Config
 	return glist;
 }
 
-std::pair<size_t, size_t> FillFunnel_setbox(ChSystemMulticoreSMC* msystem, const ConfigParameters& cp,int num_particles, double* height) {
+std::pair<size_t, size_t> FillFunnel_setbox(ChSystemMulticoreSMC* msystem, const ConfigParameters& cp,int num_particles,double height) {
 	// Get start index of particle list
 	int id = 0;
 	std::pair<size_t, size_t> glist;
@@ -362,7 +362,7 @@ std::pair<size_t, size_t> FillFunnel_setbox(ChSystemMulticoreSMC* msystem, const
 	std::normal_distribution<double> distribution(cp.grad, cp.gmarg / 6.0);
 
 	// Construct a particle cloud inside of the box limits
-	ChVector<> pos_ref = ChVector<>(-crad - marg, -crad- marg, *height+marg);
+	ChVector<> pos_ref = ChVector<>(-crad - marg, -crad- marg, height+marg);
 	int nb_beads=0;
 	int iz=0;
 	// for (int iz = 0; iz < numz; ++iz) {
@@ -374,7 +374,7 @@ std::pair<size_t, size_t> FillFunnel_setbox(ChSystemMulticoreSMC* msystem, const
 			double posz = sft_z * iz;
 
 			ChVector<> pos_next = pos_ref + ChVector<>(posx, posy, posz);
-			if (pos_next.z() >= *height+marg){
+			if (pos_next.z() >= height+marg){
 				if (pos_next.y() <= crad - marg && pos_next.y() >= -crad + marg) {
 					for (int ix = 0; ix < numx; ++ix) {
 						// if (pos_next.x() <= cp.clength_x / 2.0 - marg && pos_next.x() >= -cp.clength_x / 2.0 + marg) {
@@ -389,7 +389,7 @@ std::pair<size_t, size_t> FillFunnel_setbox(ChSystemMulticoreSMC* msystem, const
 		}
 	}
 
-	*height+=3*marg+sft_z*numz;
+	
 	// Get the end index of the particle list and return
 	glist.second = msystem->Get_bodylist().size() - 1;
 	return glist;
@@ -465,11 +465,20 @@ std::pair<std::pair<size_t, size_t>,std::pair<size_t, size_t>> AddFunnel(ChSyste
 	ChVector<> stem_pos(0,0,dist_funnel_platform);
 
 	double height=cp.dist_funnel_platform+(numh_stem-1)*sftz+grad+2.0*grad*sin(rang)*(numl_ramp-1)+2.0*grad*cos(rang);
-	double* cyl_height=&height;
+	// double* cyl_height=&height;
+
+	double marg_fill = cp.grad*1.5;
+	double sft_y = 2.0 * marg_fill * sin(CH_C_PI / 3.0);
+	double sft_z = marg_fill * Sqrt(4.0 - (1.0 / Pow(cos(CH_C_PI / 6.0), 2.0)));
+	double numx = ceil(2*(crad_body-marg_fill) / (marg_fill * 2.0)) + 1;
+	double numy = ceil(2*(crad_body-marg_fill) / sft_y) + 1;
+	double numz = ceil(nb_particles / (numx*numy)) + 1;
+	
 	std::pair<size_t, size_t> glist;
 	//glist = FillFunnel(msystem, cp, crad_body, nb_particles,cyl_height,ChVector<>(0,0,height));
 	std::cout<<"AddFunnel : nb particles = "<<nb_particles<<"\n";
-	glist = FillFunnel_setbox(msystem, cp, nb_particles,cyl_height);
+	glist = FillFunnel_setbox(msystem, cp, nb_particles,height);
+	height+=3*marg_fill+sft_z*numz;
 	std::pair<size_t, size_t> wlist;
 	wlist.first = msystem->Get_bodylist().size();
 	
@@ -555,7 +564,7 @@ std::pair<std::pair<size_t, size_t>,std::pair<size_t, size_t>> AddFunnel(ChSyste
 	
 	msystem->GetSettings()->collision.use_aabb_active = true;
 	msystem->GetSettings()->collision.aabb_min = real3(-10000 * size_platform, -10000 * size_platform, -dist_funnel_platform);
-	msystem->GetSettings()->collision.aabb_max = real3(10000 * size_platform, 10000 * size_platform, *cyl_height*3+dist_funnel_platform+shgt+height);
+	msystem->GetSettings()->collision.aabb_max = real3(10000 * size_platform, 10000 * size_platform, height*3+dist_funnel_platform+shgt+height);
 
   /*
   //Adding the standard platform and walls
@@ -575,11 +584,11 @@ std::pair<std::pair<size_t, size_t>,std::pair<size_t, size_t>> AddFunnel(ChSyste
 	// *cyl_height+=4*cp.grad;
  
 	
-  double size_z = *cyl_height+4*cp.grad-dist_funnel_platform;
+  double size_z = height+4*cp.grad-dist_funnel_platform;
 
 
 	ChVector<> pbase(0,0,dist_funnel_platform-cp.cthickness/2.0);
-	ChVector<> proof(0,0,*cyl_height+4*cp.grad+cp.cthickness/2.0);
+	ChVector<> proof(0,0,height+4*cp.grad+cp.cthickness/2.0);
 	ChVector<> pleft(-cp.cthickness/2.0-cp.funnel_large_dia/2.0,0,dist_funnel_platform+size_z/2.0);
 	ChVector<> pright(cp.cthickness/2.0+cp.funnel_large_dia/2.0,0,dist_funnel_platform+size_z/2.0);
 	ChVector<> pfront(0,-cp.cthickness/2.0-cp.funnel_large_dia/2.0,dist_funnel_platform+size_z/2.0);
