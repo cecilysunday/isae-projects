@@ -343,6 +343,7 @@ std::pair<size_t, size_t> FillFunnel_setbox(ChSystemMulticoreSMC* msystem, const
 	double crad = cp.funnel_large_dia/2.0+cp.grad;
 	int numd_body = round(CH_C_PI/asin(cp.grad/crad));
 	crad = cp.grad/sin(CH_C_PI/numd_body);
+	std::cout<<"OK \n";
 
 
 
