@@ -45,9 +45,9 @@ using namespace chrono::collision;
 // 1000 x 1000 x 300 container = 239,862 particles when gdia = 10
 // 1500 x 1500 x 300 container = 545,478 particles when gdia = 10
 // 2000 x 2000 x 300 container = 971,262 particles when gdia = 10
-double clength = 500;
-double cwidth = 500;
-double cheight = 300;
+double clength = 315;
+double cwidth = 315;
+double cheight = 220;
 double gdia = 10;
 double grho = 0.00248;
 
@@ -224,8 +224,8 @@ int main(int argc, char* argv[]) {
 
 	// Set the soft run-time parameters
 	double time = 0.0;
-	double time_step = 5.0E-6;
-	double time_sim = 0.5;
+	double time_step = 10.0E-6;
+	double time_sim = 0.25;
 
 	double timer_sim = 0;
 	double timer_total_collision = 0;

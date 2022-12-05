@@ -5,12 +5,12 @@ proj_container cyl
 proj_units mm-g-s
 
 ## Material properties shared by all bodies
-youngs 7.0E8
+youngs 7.0E7
 poisson 0.24
 mu_pp 0.16
 mu_pw 0.45
 mu_roll 0.09
-mu_spin 0
+mu_spin 0.01
 cor_pp 0.9
 cor_pw 0.5
 ad 0.0
@@ -18,7 +18,7 @@ ad 0.0
 ## Geometric properties of the container
 clength_x 315.0
 clength_y 315.0
-clength_z 140.0
+clength_z 220.0
 cthickness 10.0
 cmass 1.0E3
 
@@ -32,7 +32,7 @@ gvel 1.0E3
 grav_x 0.0
 grav_y 0.0
 grav_z -9.81E3
-time_step 5.0E-6
+time_step 10.0E-6
 time_loop 1.0E-4
 time_save 0.1
 sim_duration 0.25
