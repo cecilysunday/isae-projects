@@ -331,6 +331,68 @@ std::pair<size_t, size_t> FillFunnel(ChSystemMulticoreSMC* msystem, const Config
 	return glist;
 }
 
+std::pair<size_t, size_t> FillFunnel_setbox(ChSystemMulticoreSMC* msystem, const ConfigParameters& cp, int num_particles, double* height) {
+	// Get start index of particle list
+	int id = 0;
+	std::pair<size_t, size_t> glist;
+	glist.first = msystem->Get_bodylist().size();
+
+	// Define temporary container dimensions
+	// double temp_height = cp.clength_z * 3.3;
+	double marg = cp.grad * 1.5;
+	double crad = cp.funnel_large_dia/2.0+cp.grad;
+	int numd_body = round(CH_C_PI/asin(cp.grad/crad));
+	crad = cp.grad/sin(CH_C_PI/numd_body);
+
+
+
+	// Calculate offsets required for constructing the particle cloud
+	double sft_x = marg;
+	double sft_y = 2.0 * marg * sin(CH_C_PI / 3.0);
+	double sft_z = marg * Sqrt(4.0 - (1.0 / Pow(cos(CH_C_PI / 6.0), 2.0)));
+	double sft_w = marg * tan(CH_C_PI / 6.0);
+
+	// Set the max number of beads along the X, Y, and Z axis
+	double numx = ceil(2*(crad+marg) / (marg * 2.0)) + 1;
+	double numy = ceil(2*(crad+marg) / sft_y) + 1;
+	double numz = ceil(num_particles/(numx*numy)) + 1;
+
+	// Create a generator for computing random sphere radius values that follow a normal distribution 
+	auto seed = std::chrono::system_clock::now().time_since_epoch().count();
+	std::default_random_engine generator((unsigned int)seed);
+	std::normal_distribution<double> distribution(cp.grad, cp.gmarg / 6.0);
+
+	// Construct a particle cloud inside of the box limits
+	ChVector<> pos_ref = ChVector<>(-crad - marg, -crad - marg, *height+marg);
+	// ChVector<> pos_ref = ChVector<>(-cp.clength_x / 2.0 + marg, -cp.clength_y / 2.0 + marg, marg);
+	for (int iz = 0; iz < numz; ++iz) {
+		for (int iy = 0; iy < numy; ++iy) {
+			double posx = sft_x * (iy % 2) + sft_x * ((iz + 1) % 2);
+			double posy = sft_y * iy + sft_w * (iz % 2);
+			double posz = sft_z * iz;
+
+			ChVector<> pos_next = pos_ref + ChVector<>(posx, posy, posz);
+			// if (pos_next.z() <= temp_height - marg && pos_next.z() >= marg){
+			if (pos_next.z() >= marg){
+				if (pos_next.y() <= cp.clength_y / 2.0 - marg && pos_next.y() >= -cp.clength_y / 2.0 + marg) {
+					for (int ix = 0; ix < numx; ++ix) {
+						// if (pos_next.x() <= cp.clength_x / 2.0 - marg && pos_next.x() >= -cp.clength_x / 2.0 + marg) {
+						if (Sqrt(Pow(pos_next.x(), 2) + Pow(pos_next.y(), 2)) < crad - marg){
+							AddSphere(id++, msystem, cp, distribution(generator), pos_next, ChRandomXYZ(cp.gvel),false);
+						}
+						pos_next += ChVector<>(2.0 * sft_x, 0, 0);
+					}
+				}
+			}
+		}
+	}
+
+	*height += 2*marg + numz*sft_z; 
+	// Get the end index of the particle list and return
+	glist.second = msystem->Get_bodylist().size() - 1;
+	return glist;
+}
+
 void AddPlatform(ChSystemMulticoreSMC* msystem, const ConfigParameters &cp, 
 	std::vector<double> x_pos, std::vector<double> y_pos,std::vector<double> rad,int* id){
 
@@ -346,7 +408,7 @@ void AddPlatform(ChSystemMulticoreSMC* msystem, const ConfigParameters &cp,
 		AddSphere(*id--,msystem,cp,cp.grad,ChVector<>(x, y, 0),ChVector<>(0),true);
 
 	}
-	}
+}
 
 
 std::pair<std::pair<size_t, size_t>,std::pair<size_t, size_t>> AddFunnel(ChSystemMulticoreSMC* msystem, const ConfigParameters &cp, 
@@ -403,7 +465,8 @@ std::pair<std::pair<size_t, size_t>,std::pair<size_t, size_t>> AddFunnel(ChSyste
 	double height=cp.dist_funnel_platform+(numh_stem-1)*sftz+grad+2.0*grad*sin(rang)*(numl_ramp-1)+2.0*grad*cos(rang);
 	double* cyl_height=&height;
 	std::pair<size_t, size_t> glist;
-	glist = FillFunnel(msystem, cp, crad_body, nb_particles,cyl_height,ChVector<>(0,0,height));
+	// glist = FillFunnel(msystem, cp, crad_body, nb_particles,cyl_height,ChVector<>(0,0,height));
+	glist = FillFunnel_setbox(msystem, cp, nb_particles,cyl_height);
 	std::pair<size_t, size_t> wlist;
 	wlist.first = msystem->Get_bodylist().size();
 	
@@ -867,6 +930,7 @@ int main(int argc, char* argv[]) {
 		
 	}
 	
+	/*
 	//LOOP 2 : Break the dam ! Release the river ! 
 	// std::shared_ptr<ChBody> roof = msystem.SearchBodyID(-4);
   
@@ -988,6 +1052,8 @@ int main(int argc, char* argv[]) {
 
 		
 	}
+	*/
+
 	std::cout<<"Before archive state \n";
 	// Export the final state data for all bodies in the system
 	if (ArchiveState(msystem, mstats, cp.proj_path, mstats.num_bodies, std::min(wlist.first,glist.first), time, true) != 0) {
@@ -1009,6 +1075,7 @@ int main(int argc, char* argv[]) {
 		return -1;
 	}
 
+	/*
 	//Write masse rate value in csv file
 	unsigned long long int struct_size = sizeof(mass_rate_vector);
 	std::ofstream csv_out(cp.proj_path+"/mass_rate.csv", std::ofstream::out | std::ofstream::app);
@@ -1016,6 +1083,7 @@ int main(int argc, char* argv[]) {
 		csv_out << mass_rate_vector[j]<<"\n";
 	}
 	csv_out.close();
+	*/
 
 	//Write params for repose simus in txt file
 	std::ofstream txt_out(cp.proj_path+"/params_repose.txt");

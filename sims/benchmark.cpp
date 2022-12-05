@@ -45,9 +45,9 @@ using namespace chrono::collision;
 // 1000 x 1000 x 300 container = 239,862 particles when gdia = 10
 // 1500 x 1500 x 300 container = 545,478 particles when gdia = 10
 // 2000 x 2000 x 300 container = 971,262 particles when gdia = 10
-double clength = 500;
-double cwidth = 500;
-double cheight = 300;
+double clength = 2200;
+double cwidth = 220;
+double cheight = 220;
 double gdia = 10;
 double grho = 0.00248;
 
