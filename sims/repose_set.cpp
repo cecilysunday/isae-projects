@@ -351,10 +351,11 @@ std::pair<size_t, size_t> FillFunnel_setbox(ChSystemMulticoreSMC* msystem, const
 	double sft_w = marg * tan(CH_C_PI / 6.0);
 
 	// Set the max number of beads along the X, Y, and Z axis
-	double numx = ceil(2*(crad+marg) / (marg * 2.0)) + 1;
-	double numy = ceil(2*(crad+marg) / sft_y) + 1;
+	double numx = ceil(2*(crad-marg) / (marg * 2.0)) + 1;
+	double numy = ceil(2*(crad-marg) / sft_y) + 1;
 	double numz = ceil(num_particles / (numx*numy)) + 1;
 
+	std::cout<<"numx ="<<numx<<", numy ="<<numy<<",numz ="<<numz<<"\n";
 	// Create a generator for computing random sphere radius values that follow a normal distribution 
 	auto seed = std::chrono::system_clock::now().time_since_epoch().count();
 	std::default_random_engine generator((unsigned int)seed);
@@ -362,7 +363,11 @@ std::pair<size_t, size_t> FillFunnel_setbox(ChSystemMulticoreSMC* msystem, const
 
 	// Construct a particle cloud inside of the box limits
 	ChVector<> pos_ref = ChVector<>(-crad - marg, -crad- marg, *height+marg);
-	for (int iz = 0; iz < numz; ++iz) {
+	int nb_beads=0;
+	int iz=0;
+	// for (int iz = 0; iz < numz; ++iz) {
+	while (nb_beads<num_particles){
+		iz+=1;
 		for (int iy = 0; iy < numy; ++iy) {
 			double posx = sft_x * (iy % 2) + sft_x * ((iz + 1) % 2);
 			double posy = sft_y * iy + sft_w * (iz % 2);
@@ -370,11 +375,12 @@ std::pair<size_t, size_t> FillFunnel_setbox(ChSystemMulticoreSMC* msystem, const
 
 			ChVector<> pos_next = pos_ref + ChVector<>(posx, posy, posz);
 			if (pos_next.z() >= *height+marg){
-				if (pos_next.y() <= cp.clength_y / 2.0 - marg && pos_next.y() >= -cp.clength_y / 2.0 + marg) {
+				if (pos_next.y() <= crad - marg && pos_next.y() >= -crad + marg) {
 					for (int ix = 0; ix < numx; ++ix) {
 						// if (pos_next.x() <= cp.clength_x / 2.0 - marg && pos_next.x() >= -cp.clength_x / 2.0 + marg) {
 						if (Sqrt(Pow(pos_next.x(), 2) + Pow(pos_next.y(), 2)) < crad - marg){
 							AddSphere(id++, msystem, cp, distribution(generator), pos_next, ChRandomXYZ(cp.gvel),false);
+							++nb_beads;
 						}
 						pos_next += ChVector<>(2.0 * sft_x, 0, 0);
 					}
@@ -462,10 +468,10 @@ std::pair<std::pair<size_t, size_t>,std::pair<size_t, size_t>> AddFunnel(ChSyste
 	double* cyl_height=&height;
 	std::pair<size_t, size_t> glist;
 	//glist = FillFunnel(msystem, cp, crad_body, nb_particles,cyl_height,ChVector<>(0,0,height));
+	std::cout<<"AddFunnel : nb particles = "<<nb_particles<<"\n";
 	glist = FillFunnel_setbox(msystem, cp, nb_particles,cyl_height);
 	std::pair<size_t, size_t> wlist;
 	wlist.first = msystem->Get_bodylist().size();
-	std::cout<<"Test \n";
 	
 	// Add funnel
 	// auto funnel= std::shared_ptr<ChBody>(msystem->NewBody());
@@ -586,14 +592,14 @@ std::pair<std::pair<size_t, size_t>,std::pair<size_t, size_t>> AddFunnel(ChSyste
 	ChVector<> sfront(cp.funnel_large_dia/2.0,cp.cthickness/2.0,size_z/2.0);
 	ChVector<> sback(cp.funnel_large_dia/2.0,cp.cthickness/2.0,size_z/2.0);
 
-	bool vis=false;
+	bool vis=true;
 
 	AddWall(id--,msystem,cp,sbase,pbase,vis);
 	AddWall(id--,msystem,cp,sroof,proof,vis);
-	AddWall(id--,msystem,cp,sleft,pleft,vis);
-	AddWall(id--,msystem,cp,sright,pright,vis);
-	AddWall(id--,msystem,cp,sback,pback,vis);
-	AddWall(id--,msystem,cp,sfront,pfront,vis);
+	AddWall(id--,msystem,cp,sleft,pleft, vis);
+	AddWall(id--,msystem,cp,sright,pright,not vis);
+	AddWall(id--,msystem,cp,sback,pback,not vis);
+	AddWall(id--,msystem,cp,sfront,pfront, vis);
   //AddPlatform(msystem,cp,x_pos,y_pos,rad,&id);
 
 
@@ -874,7 +880,8 @@ int main(int argc, char* argv[]) {
 	application->Initialize();
 	application->AddTypicalLights();
 	application->AddSkyBox();
-	application->AddCamera(ChVector<>(80, 80, cp.dist_funnel_platform/2.0+cp.height_stem/2.0), ChVector<>(0,0,cp.dist_funnel_platform/2.0+cp.height_stem/2.0));
+	// application->AddCamera(ChVector<>(80, 80, cp.dist_funnel_platform/2.0+cp.height_stem/2.0), ChVector<>(0,0,cp.dist_funnel_platform/2.0+cp.height_stem/2.0));
+	application->AddCamera(ChVector<>(80, 80, cp.dist_funnel_platform/2.0+cp.height_stem/2.0), ChVector<>(0,0,cp.dist_funnel_platform/2.0+cp.height_stem/2.0+30));
 	application->AddLight(ChVector<>(0, cp.clength_z * 2, cp.clength_z), cp.clength_z * 2);
 	#endif
 
