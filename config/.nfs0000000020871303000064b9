@@ -1,0 +1,53 @@
+
+## Project information
+proj_type repose
+proj_container box
+proj_units mm-g-s
+
+## Material properties shared by all bodies
+youngs 7.0E5
+poisson 0.24
+mu_pp 0.16
+mu_pw 0.45
+mu_roll 0.09
+mu_spin 0.0
+cor_pp 0.9
+cor_pw 0.5
+ad 0.0
+
+## Geometric properties of the container
+clength_x 5
+clength_y 5
+clength_z 10.0
+cthickness 1.0
+cmass 1.0E3
+
+## Geometric properties of the granular surface material
+gdia 3
+gmarg 0.5
+grho 2.48E-3
+gvel 1.0E3
+
+## Simulation run-time parameters
+grav_x 0.0
+grav_y 0.0
+grav_z -9.81E3
+time_step 1.0E-5
+time_loop 1.0E-3
+time_save 0.1
+sim_duration 10
+
+## Simulation solver and collision detection parameters
+force_model hertz
+adhesion_model constant
+
+##Parameters for angle of repose measurement
+dist_funnel_platform 10
+angle_funnel 60
+height_stem 10
+funnel_small_diameter 10
+funnel_large_diameter 50
+platform_size 100
+bead_rad_std 0.2
+
+
