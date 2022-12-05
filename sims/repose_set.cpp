@@ -372,10 +372,10 @@ std::pair<size_t, size_t> FillFunnel_setbox(ChSystemMulticoreSMC* msystem, const
 	// Construct a particle cloud inside of the box limits
 	ChVector<> pos_ref = ChVector<>(-crad - marg, -crad- marg, height+marg);
 	int nb_beads=0;
-	int iz=0;
-	// for (int iz = 0; iz < numz; ++iz) {
-	while (nb_beads<num_particles){
-		iz+=1;
+	//int iz=0;
+	for (int iz = 0; iz < numz; ++iz) {
+	//while (nb_beads<num_particles){
+		//iz+=1;
 		for (int iy = 0; iy < numy; ++iy) {
 			double posx = sft_x * (iy % 2) + sft_x * ((iz + 1) % 2);
 			double posy = sft_y * iy + sft_w * (iz % 2);
@@ -385,8 +385,9 @@ std::pair<size_t, size_t> FillFunnel_setbox(ChSystemMulticoreSMC* msystem, const
 			if (pos_next.z() >= height+marg){
 				if (pos_next.y() <= crad - marg && pos_next.y() >= -crad + marg) {
 					for (int ix = 0; ix < numx; ++ix) {
-						// if (pos_next.x() <= cp.clength_x / 2.0 - marg && pos_next.x() >= -cp.clength_x / 2.0 + marg) {
-						if (Sqrt(Pow(pos_next.x(), 2) + Pow(pos_next.y(), 2)) < crad - marg){
+						//if (pos_next.x() <= cp.clength_x / 2.0 - marg && pos_next.x() >= -cp.clength_x / 2.0 + marg) {
+						if (pos_next.x() <= 2*crad - marg && pos_next.x() >= -2*crad + marg) {
+						//if (Sqrt(Pow(pos_next.x(), 2) + Pow(pos_next.y(), 2)) < crad - marg){
 							AddSphere(id++, msystem, cp, distribution(generator), pos_next, ChRandomXYZ(cp.gvel),false);
 							++nb_beads;
 						}
