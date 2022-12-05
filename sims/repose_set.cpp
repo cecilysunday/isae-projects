@@ -331,7 +331,7 @@ std::pair<size_t, size_t> FillFunnel(ChSystemMulticoreSMC* msystem, const Config
 	return glist;
 }
 
-std::pair<size_t, size_t> FillFunnel_setbox(ChSystemMulticoreSMC* msystem, const ConfigParameters& cp,int num_particles,double height) {
+std::pair<size_t, size_t> FillFunnel_setbox(ChSystemMulticoreSMC* msystem, const ConfigParameters& cp) {
 	// Get start index of particle list
 	int id = 0;
 	std::pair<size_t, size_t> glist;
@@ -343,6 +343,14 @@ std::pair<size_t, size_t> FillFunnel_setbox(ChSystemMulticoreSMC* msystem, const
 	double crad=cp.funnel_large_dia/2.0+cp.grad;
 	int numd_body=round(CH_C_PI/asin(cp.grad/crad));
 	crad=cp.grad/sin(CH_C_PI/numd_body);
+	int num_particles = round(0.25*pow(cp.platform_size/2.0/cp.grad,3)*tan(CH_C_PI/3.0));
+
+	double rang = cp.angle_funnel*CH_C_PI/180;
+	double sftz = cp.grad * sqrt(4.0 - (1.0 / pow(cos(CH_C_PI / 6.0), 2.0)));
+	double numh_stem = round((cp.height_stem - 2.0 * cp.grad) / sftz + 1);				
+	double rlength = (cp.funnel_large_dia - cp.funnel_small_dia) / (2.0 * cos(rang));
+	double numl_ramp = round(rlength / (2.0 * cp.grad));
+	double height=cp.dist_funnel_platform+(numh_stem-1)*sftz+cp.grad+2.0*cp.grad*sin(rang)*(numl_ramp-1)+2.0*cp.grad*cos(rang);
 
 	// Calculate offsets required for constructing the particle cloud
 	double sft_x = marg;
@@ -477,7 +485,7 @@ std::pair<std::pair<size_t, size_t>,std::pair<size_t, size_t>> AddFunnel(ChSyste
 	std::pair<size_t, size_t> glist;
 	//glist = FillFunnel(msystem, cp, crad_body, nb_particles,cyl_height,ChVector<>(0,0,height));
 	std::cout<<"AddFunnel : nb particles = "<<nb_particles<<"\n";
-	glist = FillFunnel_setbox(msystem, cp, nb_particles,height);
+	glist = FillFunnel_setbox(msystem, cp);
 	height+=3*marg_fill+sft_z*numz;
 	std::pair<size_t, size_t> wlist;
 	wlist.first = msystem->Get_bodylist().size();
