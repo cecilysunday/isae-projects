@@ -340,17 +340,6 @@ std::pair<size_t, size_t> FillFunnel_setbox(ChSystemMulticoreSMC* msystem, const
 	// Define temporary container dimensions
 	double temp_height = cp.clength_z * 3.3;
 	double marg = cp.grad * 1.5;
-	double crad=cp.funnel_large_dia/2.0+cp.grad;
-	int numd_body=round(CH_C_PI/asin(cp.grad/crad));
-	crad=cp.grad/sin(CH_C_PI/numd_body);
-	int num_particles = round(0.25*pow(cp.platform_size/2.0/cp.grad,3)*tan(CH_C_PI/3.0));
-
-	double rang = cp.angle_funnel*CH_C_PI/180;
-	double sftz = cp.grad * sqrt(4.0 - (1.0 / pow(cos(CH_C_PI / 6.0), 2.0)));
-	double numh_stem = round((cp.height_stem - 2.0 * cp.grad) / sftz + 1);				
-	double rlength = (cp.funnel_large_dia - cp.funnel_small_dia) / (2.0 * cos(rang));
-	double numl_ramp = round(rlength / (2.0 * cp.grad));
-	double height=cp.dist_funnel_platform+(numh_stem-1)*sftz+cp.grad+2.0*cp.grad*sin(rang)*(numl_ramp-1)+2.0*cp.grad*cos(rang);
 
 	// Calculate offsets required for constructing the particle cloud
 	double sft_x = marg;
@@ -359,37 +348,29 @@ std::pair<size_t, size_t> FillFunnel_setbox(ChSystemMulticoreSMC* msystem, const
 	double sft_w = marg * tan(CH_C_PI / 6.0);
 
 	// Set the max number of beads along the X, Y, and Z axis
-	double numx = ceil(2*(crad-marg) / (marg * 2.0)) + 1;
-	double numy = ceil(2*(crad-marg) / sft_y) + 1;
-	double numz = ceil(num_particles / (numx*numy)) + 1;
+	double numx = ceil(cp.clength_x / (marg * 2.0)) + 1;
+	double numy = ceil(cp.clength_y / sft_y) + 1;
+	double numz = ceil(temp_height / sft_z) + 1;
 
-	std::cout<<"numx ="<<numx<<", numy ="<<numy<<",numz ="<<numz<<"\n";
 	// Create a generator for computing random sphere radius values that follow a normal distribution 
 	auto seed = std::chrono::system_clock::now().time_since_epoch().count();
 	std::default_random_engine generator((unsigned int)seed);
 	std::normal_distribution<double> distribution(cp.grad, cp.gmarg / 6.0);
 
 	// Construct a particle cloud inside of the box limits
-	ChVector<> pos_ref = ChVector<>(-crad - marg, -crad- marg, height+marg);
-	int nb_beads=0;
-	//int iz=0;
+	ChVector<> pos_ref = ChVector<>(-cp.clength_x / 2.0 + marg, -cp.clength_y / 2.0 + marg, marg);
 	for (int iz = 0; iz < numz; ++iz) {
-	//while (nb_beads<num_particles){
-		//iz+=1;
 		for (int iy = 0; iy < numy; ++iy) {
 			double posx = sft_x * (iy % 2) + sft_x * ((iz + 1) % 2);
 			double posy = sft_y * iy + sft_w * (iz % 2);
 			double posz = sft_z * iz;
 
 			ChVector<> pos_next = pos_ref + ChVector<>(posx, posy, posz);
-			if (pos_next.z() >= height+marg){
-				if (pos_next.y() <= crad - marg && pos_next.y() >= -crad + marg) {
+			if (pos_next.z() <= temp_height - marg && pos_next.z() >= marg){
+				if (pos_next.y() <= cp.clength_y / 2.0 - marg && pos_next.y() >= -cp.clength_y / 2.0 + marg) {
 					for (int ix = 0; ix < numx; ++ix) {
-						//if (pos_next.x() <= cp.clength_x / 2.0 - marg && pos_next.x() >= -cp.clength_x / 2.0 + marg) {
-						if (pos_next.x() <= 2*crad - marg && pos_next.x() >= -2*crad + marg) {
-						//if (Sqrt(Pow(pos_next.x(), 2) + Pow(pos_next.y(), 2)) < crad - marg){
+						if (pos_next.x() <= cp.clength_x / 2.0 - marg && pos_next.x() >= -cp.clength_x / 2.0 + marg) {
 							AddSphere(id++, msystem, cp, distribution(generator), pos_next, ChRandomXYZ(cp.gvel),false);
-							++nb_beads;
 						}
 						pos_next += ChVector<>(2.0 * sft_x, 0, 0);
 					}
@@ -398,7 +379,6 @@ std::pair<size_t, size_t> FillFunnel_setbox(ChSystemMulticoreSMC* msystem, const
 		}
 	}
 
-	
 	// Get the end index of the particle list and return
 	glist.second = msystem->Get_bodylist().size() - 1;
 	return glist;
