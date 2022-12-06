@@ -361,7 +361,8 @@ std::pair<size_t, size_t> FillFunnel_setbox(ChSystemMulticoreSMC* msystem, const
 	// Set the max number of beads along the X, Y, and Z axis
 	double numx = ceil(cp.clength_x / (marg * 2.0)) + 1;
 	double numy = ceil(cp.clength_y / sft_y) + 1;
-	double numz = ceil(temp_height / sft_z) + 1;
+	//double numz = ceil(temp_height / sft_z) + 1;
+	double numz = ceil(num_particles / (numx*numy)) + 1;
 
 	// Create a generator for computing random sphere radius values that follow a normal distribution 
 	auto seed = std::chrono::system_clock::now().time_since_epoch().count();
