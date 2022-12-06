@@ -82,6 +82,41 @@ void AddSphere(int id, ChSystemMulticoreSMC* msystem, const ConfigParameters& cp
 	return;
 }
 
+void AddSphereWall(int id, ChSystemMulticoreSMC* msystem, const ConfigParameters& cp,
+	double radius, ChVector<> pos, ChVector<> init_v) {
+	// Calculate derived parameters
+	double mass = cp.grho * (4.0 / 3.0) * CH_C_PI * Pow(radius, 3.0);
+	ChVector<> inertia = 0.4 * mass * Pow(radius, 2.0) * ChVector<>(1, 1, 1);
+
+	// Create a spherical body. Set parameters and collision model
+	auto body = std::shared_ptr<ChBody>(msystem->NewBody());
+	body->SetIdentifier(id);
+	body->SetMass(mass);
+	body->SetPos(pos);
+	body->SetRot(QUNIT);
+	body->SetPos_dt(ChVector<>(0));
+	body->SetWvel_par(VNULL);
+	body->SetInertiaXX(inertia);
+	body->SetBodyFixed(true);
+	body->SetCollide(true);
+
+	body->GetCollisionModel()->ClearModel();
+	utils::AddSphereGeometry(body.get(), cp.mat_pp, radius);
+	body->GetCollisionModel()->BuildModel();
+
+	// Attach a random color to the sphere
+	#ifdef CHRONO_IRRLICHT
+	auto mvisual = chrono_types::make_shared<ChSphereShape>();
+	mvisual->GetSphereGeometry().rad = radius;
+	mvisual->SetColor(ChColor(0.35f, 0.85f, 0.15f));
+	body->AddVisualShape(mvisual);
+	#endif
+
+	// Add the sphere to the system 
+	msystem->AddBody(body);
+
+	return;
+}
 
 void AddWall(int id, ChSystemMulticoreSMC* msystem, const ConfigParameters &cp,
 	ChVector<> size, ChVector<> pos, bool vis) {
@@ -248,7 +283,7 @@ std::pair<size_t, size_t> AddPlatform(ChSystemMulticoreSMC* msystem, const Confi
 		double y = platform_y_pos[i];
 		double radius = platform_rad[i];
 		// utils::AddSphereGeometry(platform.get(), cp.mat_pp, radius, ChVector<>(x, y, 0), ChQuaternion<>(1, 0, 0, 0), true);
-		AddSphere(id--,msystem,cp,cp.grad,ChVector<>(x, y, 0),ChVector<>(0));
+		AddSphereWall(id--,msystem,cp,radius,ChVector<>(x, y, 0),ChVector<>(0));
 
 	}
 
@@ -391,7 +426,7 @@ int main(int argc, char* argv[]) {
 	application->AddTypicalLights();
 	application->AddSkyBox();
 	// application->AddCamera(ChVector<>(0, cp.clength_x * 2, cp.clength_z), ChVector<>(0, 0, cp.clength_z));
-	application->AddCamera(ChVector<>(0, cp.clength_x * 2, cp.dist_funnel_platform+500), ChVector<>(0, 0, cp.clength_z));
+	application->AddCamera(ChVector<>(0, cp.clength_x * 2, cp.dist_funnel_platform), ChVector<>(0, 0, cp.dist_funnel_platform));
 	application->AddLight(ChVector<>(0, cp.clength_z * 2, cp.clength_z), cp.clength_z * 2);
 	#endif
 
