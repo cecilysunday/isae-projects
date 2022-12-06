@@ -615,8 +615,8 @@ std::pair<std::pair<size_t, size_t>,std::pair<size_t, size_t>> AddFunnel(ChSyste
 	AddWall(id--,msystem,cp,sbase,pbase,vis);
 	AddWall(id--,msystem,cp,sroof,proof,vis);
 	AddWall(id--,msystem,cp,sleft,pleft, vis);
-	AddWall(id--,msystem,cp,sright,pright,not vis);
-	AddWall(id--,msystem,cp,sback,pback,not vis);
+	AddWall(id--,msystem,cp,sright,pright, vis);
+	AddWall(id--,msystem,cp,sback,pback,vis);
 	AddWall(id--,msystem,cp,sfront,pfront, vis);
   //AddPlatform(msystem,cp,x_pos,y_pos,rad,&id);
 
@@ -899,7 +899,7 @@ int main(int argc, char* argv[]) {
 	application->AddTypicalLights();
 	application->AddSkyBox();
 	// application->AddCamera(ChVector<>(80, 80, cp.dist_funnel_platform/2.0+cp.height_stem/2.0), ChVector<>(0,0,cp.dist_funnel_platform/2.0+cp.height_stem/2.0));
-	application->AddCamera(ChVector<>(80, 80, cp.dist_funnel_platform/2.0+cp.height_stem/2.0), ChVector<>(0,0,cp.dist_funnel_platform/2.0+cp.height_stem/2.0+30));
+	application->AddCamera(ChVector<>(80, 80, cp.dist_funnel_platform/2.0+cp.height_stem/2.0+200), ChVector<>(0,0,cp.dist_funnel_platform/2.0+cp.height_stem/2.0+100));
 	application->AddLight(ChVector<>(0, cp.clength_z * 2, cp.clength_z), cp.clength_z * 2);
 	#endif
 
@@ -944,17 +944,17 @@ int main(int argc, char* argv[]) {
 		// Save and write data every (cp.save_step / time_step.cp) steps 
 
 		if (time > time_save) {
-			/*
-      if (ArchiveState(msystem, mstats, cp.proj_path, mstats.num_particles, glist.first, time) != 0) {
+			
+      		if (ArchiveState(msystem, mstats, cp.proj_path, mstats.num_particles, glist.first, time) != 0) {
 				fprintf(stderr, "\nERR: Error archiving run-time data \n");
 				return -1;
 			}
-      */
+      
 			time_save += cp.time_save;
 		}
 	
 		// Calculate the average velocity of all particles and exit the loop if KE < threshold
-		//if(CalcAverageKE(msystem, cp.proj_path, mstats.num_particles, glist.first, time, threshold)) break;
+		if(CalcAverageKE(msystem, cp.proj_path, mstats.num_particles, glist.first, time, threshold)) break;
    std::cout<<"Fin iteration \n";
 		
 	}
