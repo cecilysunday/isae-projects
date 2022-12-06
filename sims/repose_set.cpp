@@ -195,10 +195,70 @@ std::pair<size_t, size_t> FillContainer(ChSystemMulticoreSMC* msystem, const Con
 	return glist;
 }
 
+std::pair<size_t, size_t> AddPlatform(ChSystemMulticoreSMC* msystem, const ConfigParameters &cp,const std::string cfile){
+	std::pair<size_t, size_t> plist;
+	plist.first = msystem->Get_bodylist().size();
 
-std::pair<size_t, size_t> AddContainer(ChSystemMulticoreSMC* msystem, const ConfigParameters& cp) {
+	int id =-1;
+
+	const std::string cfolder = cfile.substr(0,cfile.rfind("/")+1);
+	const std::string path_platform_config_file = cfolder+cp.config_platform_file;
+	std::cout<<"cfolder = "<<path_platform_config_file<<"\n";
+
+	std::ifstream file(path_platform_config_file);
+	if (!file) {
+		fprintf(stderr, "\nERR: Platform file does not exist!\n");
+	}
+	std::string line;
+  
+	std::vector<double> platform_x_pos, platform_y_pos,platform_rad;
+	while (std::getline(file, line)) {
+		// Ignore empy line or lines that start with #. Otherwise, parse words.
+		if (line.empty()) continue;
+
+		// Parse each line into a vector of words
+		std::vector<std::string> parsed_line;
+		std::vector<std::string> parsed_word;
+
+		char* cline = const_cast<char*>(line.c_str());
+		char* delim = strtok(cline, " ");
+		while (delim != NULL) {
+			std::string parsed_word(delim);
+			parsed_line.push_back(parsed_word);
+			delim = strtok(NULL, " ");
+			// std::cout<<"delim = "<<delim<<"\n";
+		}
+		if (parsed_line.size() != 3) {
+			std::cout<<"Problem for reading platform file \n"; 
+		}
+
+		platform_x_pos.push_back(std::stod(parsed_line[0]));
+		platform_y_pos.push_back(std::stod(parsed_line[1]));
+		platform_rad.push_back(std::stod(parsed_line[2]));
+
+	}
+
+	int n=platform_x_pos.size();
+
+
+
+	for(int i=0;i<n;i++){
+		std::cout<<"id dans addplatform = "<<id<<"\n";
+		double x = platform_x_pos[i];
+		double y = platform_y_pos[i];
+		double radius = platform_rad[i];
+		// utils::AddSphereGeometry(platform.get(), cp.mat_pp, radius, ChVector<>(x, y, 0), ChQuaternion<>(1, 0, 0, 0), true);
+		AddSphere(id--,msystem,cp,cp.grad,ChVector<>(x, y, 0),ChVector<>(0));
+
+	}
+
+	plist.second = msystem->Get_bodylist().size() - 1;
+	return plist;
+}
+
+std::pair<size_t, size_t> AddContainer(ChSystemMulticoreSMC* msystem, const ConfigParameters& cp, int id_base) {
 	// Get start index of the wall list
-	int id = 0;
+	int id = id_base;
 	std::pair<size_t, size_t> wlist;
 	wlist.first = msystem->Get_bodylist().size();
 
@@ -269,12 +329,14 @@ std::pair<size_t, size_t> AddContainer(ChSystemMulticoreSMC* msystem, const Conf
 	ChVector<> pfrnt = ChVector<>(0, 2*crad_body + cp.cthickness, 2.0*pos_center_wall_z) / 2.0;
 	ChVector<> pback = -ChVector<>(0, 2*crad_body + cp.cthickness, -2.0*pos_center_wall_z) / 2.0;
 
+	std::cout<<"id dans add container,avant = "<<id<<"\n";
 	AddWall(--id, msystem, cp, sbase, pbase, true);
 	AddWall(--id, msystem, cp, srght, prght, true);
 	AddWall(--id, msystem, cp, srght, pleft, true);
 	AddWall(--id, msystem, cp, sback, pback, true);
 	AddWall(--id, msystem, cp, sback, pfrnt, false);
 	AddWall(--id, msystem, cp, sbase, proof, true);
+	std::cout<<"id dans add container,après = "<<id<<"\n";
 
 	// Find and return index range of full wall list 
 	wlist.second = msystem->Get_bodylist().size() - 1;
@@ -304,7 +366,9 @@ int main(int argc, char* argv[]) {
 	}
 
 	// Add the container and grains to the simulation
-	std::pair<size_t, size_t> wlist = AddContainer(&msystem, cp);
+	std::pair<size_t, size_t> plist = AddPlatform(&msystem,cp,cfile);
+	std::pair<size_t, size_t> wlist = AddContainer(&msystem, cp,-plist.second-1);
+	wlist.first=plist.first;
 	std::pair<size_t, size_t> glist = FillContainer(&msystem, cp);
 
 	// Create an object to track certain system info and stats
