@@ -387,7 +387,8 @@ std::pair<size_t, size_t> FillFunnel_setbox(ChSystemMulticoreSMC* msystem, const
 				// if (pos_next.y() <= cp.clength_y / 2.0 - marg && pos_next.y() >= -cp.clength_y / 2.0 + marg) {
 				if (pos_next.y() <= crad - marg && pos_next.y() >= -crad + marg) {
 					for (int ix = 0; ix < numx; ++ix) {
-						if (pos_next.x() <= cp.clength_x / 2.0 - marg && pos_next.x() >= -cp.clength_x / 2.0 + marg) {
+						// if (pos_next.x() <= cp.clength_x / 2.0 - marg && pos_next.x() >= -cp.clength_x / 2.0 + marg) {
+						if (Sqrt(Pow(pos_next.x(), 2) + Pow(pos_next.y(), 2)) < crad - marg){
 							AddSphere(id++, msystem, cp, distribution(generator), pos_next, ChRandomXYZ(cp.gvel),false);
 							nb_beads+=1;
 						}
