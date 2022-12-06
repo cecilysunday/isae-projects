@@ -117,9 +117,39 @@ std::pair<size_t, size_t> FillContainer(ChSystemMulticoreSMC* msystem, const Con
 	std::pair<size_t, size_t> glist;
 	glist.first = msystem->Get_bodylist().size();
 
+	// Get the cylinder wall body, assumin the index of the wall is 1 (0 = base, 1 = wall, 2 = roof)
+	std::shared_ptr<ChBody> cwall = msystem->Get_bodylist().at(1);
+	
 	// Define temporary container dimensions
 	double temp_height = cp.clength_z * 3.3;
 	double marg = cp.grad * 1.5;
+
+	double grad = cp.grad;
+	double sdia = cp.funnel_small_dia;
+	double shgt = cp.height_stem;
+	double bdia = cp.funnel_large_dia ;
+	double rang = cp.angle_funnel*CH_C_PI/180;
+	double rlength = (bdia - sdia) / (2.0 * cos(rang));
+	double dist_funnel_platform=cp.dist_funnel_platform; //ISO : 75
+	double size_platform =cp.platform_size; //ISO : 100
+
+	int nb_particles = round(0.25*pow(size_platform/2.0/grad,3)*tan(CH_C_PI/3.0));
+	double brad=bdia/2.0;
+	
+	double bhgt=(2*pow(dist_funnel_platform,3))/(3*pow(brad*tan(rang),2));
+	double crad_stem = sdia / 2.0 + grad;									/// Estimated radius of funnel stem particles-ring
+	double crad_body = bdia / 2.0 + grad;									/// Estimated radius of funnel body particles-ring
+
+	double sftz = grad * sqrt(4.0 - (1.0 / pow(cos(CH_C_PI / 6.0), 2.0)));	/// Shift between z-layers
+	double numd_stem = round(CH_C_PI / asin(grad / crad_stem));				/// Num particles needed to construct funnel stem particle-ring
+	double numd_body = round(CH_C_PI / asin(grad / crad_body));				/// Num particles needed to construct funnel stem particle-ring
+	double numh_stem = round((shgt - 2.0 * grad) / sftz + 1);				/// Num particles needed to preserve the funnel stem height
+	
+	double numl_ramp = round(rlength / (2.0 * grad));						/// Num particles along the ramped portion of the funnel
+
+	crad_stem = grad / sin(CH_C_PI / numd_stem);							/// Actual radius of funnel stem particle-ring
+	crad_body = grad / sin(CH_C_PI / numd_body);							/// Actual radius of funnel body particle-ring
+
 
 	// Calculate offsets required for constructing the particle cloud
 	double sft_x = marg;
@@ -128,17 +158,20 @@ std::pair<size_t, size_t> FillContainer(ChSystemMulticoreSMC* msystem, const Con
 	double sft_w = marg * tan(CH_C_PI / 6.0);
 
 	// Set the max number of beads along the X, Y, and Z axis
-	double numx = ceil(cp.clength_x / (marg * 2.0)) + 1;
-	double numy = ceil(cp.clength_y / sft_y) + 1;
-	double numz = ceil(temp_height / sft_z) + 1;
+	double numx = ceil(2*crad_body / (marg * 2.0)) + 1;
+	double numy = ceil(2*crad_body / sft_y) + 1;
+	double numz = ceil(nb_particles/(numx*numy)) + 1;
 
+	std::cout<<"numx = "<<numx<<", numy = "<<numy<<", numz = "<<numz<<"\n";
 	// Create a generator for computing random sphere radius values that follow a normal distribution 
 	auto seed = std::chrono::system_clock::now().time_since_epoch().count();
 	std::default_random_engine generator((unsigned int)seed);
 	std::normal_distribution<double> distribution(cp.grad, cp.gmarg / 6.0);
 
+	double height=cp.dist_funnel_platform+(numh_stem-1)*sftz+grad+2.0*grad*sin(rang)*(numl_ramp-1)+2.0*grad*cos(rang);
+
 	// Construct a particle cloud inside of the box limits
-	ChVector<> pos_ref = ChVector<>(-cp.clength_x / 2.0 + marg, -cp.clength_y / 2.0 + marg, marg);
+	ChVector<> pos_ref = ChVector<>(-crad_body + marg, -crad_body + marg, height);
 	for (int iz = 0; iz < numz; ++iz) {
 		for (int iy = 0; iy < numy; ++iy) {
 			double posx = sft_x * (iy % 2) + sft_x * ((iz + 1) % 2);
@@ -146,14 +179,12 @@ std::pair<size_t, size_t> FillContainer(ChSystemMulticoreSMC* msystem, const Con
 			double posz = sft_z * iz;
 
 			ChVector<> pos_next = pos_ref + ChVector<>(posx, posy, posz);
-			if (pos_next.z() <= temp_height - marg && pos_next.z() >= marg){
-				if (pos_next.y() <= cp.clength_y / 2.0 - marg && pos_next.y() >= -cp.clength_y / 2.0 + marg) {
-					for (int ix = 0; ix < numx; ++ix) {
-						if (pos_next.x() <= cp.clength_x / 2.0 - marg && pos_next.x() >= -cp.clength_x / 2.0 + marg) {
-							AddSphere(id++, msystem, cp, distribution(generator), pos_next, ChRandomXYZ(cp.gvel));
-						}
-						pos_next += ChVector<>(2.0 * sft_x, 0, 0);
+			if (pos_next.z() >= height){
+				for (int ix = 0; ix < numx; ++ix) {
+					if (Sqrt(Pow(pos_next.x(), 2) + Pow(pos_next.y(), 2)) < crad_body - marg) {
+						AddSphere(id++, msystem, cp, distribution(generator), pos_next, ChRandomXYZ(cp.gvel));
 					}
+					pos_next += ChVector<>(2.0 * sft_x, 0, 0);
 				}
 			}
 		}
@@ -242,7 +273,7 @@ std::pair<size_t, size_t> AddContainer(ChSystemMulticoreSMC* msystem, const Conf
 	AddWall(--id, msystem, cp, srght, prght, true);
 	AddWall(--id, msystem, cp, srght, pleft, true);
 	AddWall(--id, msystem, cp, sback, pback, true);
-	AddWall(--id, msystem, cp, sback, pfrnt, true);
+	AddWall(--id, msystem, cp, sback, pfrnt, false);
 	AddWall(--id, msystem, cp, sbase, proof, true);
 
 	// Find and return index range of full wall list 
