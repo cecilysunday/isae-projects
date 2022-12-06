@@ -382,7 +382,8 @@ std::pair<size_t, size_t> FillFunnel_setbox(ChSystemMulticoreSMC* msystem, const
 			double posz = sft_z * iz;
 
 			ChVector<> pos_next = pos_ref + ChVector<>(posx, posy, posz);
-			if (pos_next.z() <= temp_height - marg && pos_next.z() >= marg){
+			// if (pos_next.z() <= temp_height - marg && pos_next.z() >= marg){
+			if (pos_next.z() >= height+marg){
 				if (pos_next.y() <= cp.clength_y / 2.0 - marg && pos_next.y() >= -cp.clength_y / 2.0 + marg) {
 					for (int ix = 0; ix < numx; ++ix) {
 						if (pos_next.x() <= cp.clength_x / 2.0 - marg && pos_next.x() >= -cp.clength_x / 2.0 + marg) {
