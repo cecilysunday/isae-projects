@@ -236,56 +236,93 @@ std::pair<size_t, size_t> AddPlatform(ChSystemMulticoreSMC* msystem, const Confi
 
 	int id =-1;
 
-	const std::string cfolder = cfile.substr(0,cfile.rfind("/")+1);
-	const std::string path_platform_config_file = cfolder+cp.config_platform_file;
-	std::cout<<"cfolder = "<<path_platform_config_file<<"\n";
+	double marg=1.5*cp.grad;
+	double sft_x = marg;
+	double sft_y = 2.0 * marg * sin(CH_C_PI / 3.0);
+	double sft_z = marg * Sqrt(4.0 - (1.0 / Pow(cos(CH_C_PI / 6.0), 2.0)));
+	double sft_w = marg * tan(CH_C_PI / 6.0);
 
-	std::ifstream file(path_platform_config_file);
-	if (!file) {
-		fprintf(stderr, "\nERR: Platform file does not exist!\n");
+	// Set the max number of beads along the X, Y, and Z axis
+	double numx = ceil(2*cp.platform_size / (marg * 2.0)) + 1;
+	double numy = ceil(2*cp.platform_size / sft_y) + 1;
+
+	// Create a generator for computing random sphere radius values that follow a normal distribution 
+	auto seed = std::chrono::system_clock::now().time_since_epoch().count();
+	std::default_random_engine generator((unsigned int)seed);
+	std::normal_distribution<double> distribution(cp.grad, cp.gmarg / 6.0);
+
+
+	// Construct a particle cloud inside of the box limits
+	ChVector<> pos_ref = ChVector<>(-cp.platform_size + marg, -cp.platform_size + marg, 0);
+
+	for (int iy = 0; iy < numy; ++iy) {
+		double posx = sft_x * (iy % 2) + sft_x ;
+		double posy = sft_y * iy ;
+		double posz = 0;
+
+		ChVector<> pos_next = pos_ref + ChVector<>(posx, posy, posz);
+
+		for (int ix = 0; ix < numx; ++ix) {
+			if (Sqrt(Pow(pos_next.x(), 2) + Pow(pos_next.y(), 2)) < cp.platform_size - marg) {
+				AddSphereWall(id++, msystem, cp, distribution(generator), pos_next, ChRandomXYZ(cp.gvel));
+			}
+			pos_next += ChVector<>(2.0 * sft_x, 0, 0);
+		}
+		
 	}
-	std::string line;
+	
+
+
+	// const std::string cfolder = cfile.substr(0,cfile.rfind("/")+1);
+	// const std::string path_platform_config_file = cfolder+cp.config_platform_file;
+	// std::cout<<"cfolder = "<<path_platform_config_file<<"\n";
+
+	// std::ifstream file(path_platform_config_file);
+	// if (!file) {
+	// 	fprintf(stderr, "\nERR: Platform file does not exist!\n");
+	// }
+	// std::string line;
   
-	std::vector<double> platform_x_pos, platform_y_pos,platform_rad;
-	while (std::getline(file, line)) {
-		// Ignore empy line or lines that start with #. Otherwise, parse words.
-		if (line.empty()) continue;
+	// std::vector<double> platform_x_pos, platform_y_pos,platform_rad;
+	// while (std::getline(file, line)) {
+	// 	// Ignore empy line or lines that start with #. Otherwise, parse words.
+	// 	if (line.empty()) continue;
 
-		// Parse each line into a vector of words
-		std::vector<std::string> parsed_line;
-		std::vector<std::string> parsed_word;
+	// 	// Parse each line into a vector of words
+	// 	std::vector<std::string> parsed_line;
+	// 	std::vector<std::string> parsed_word;
 
-		char* cline = const_cast<char*>(line.c_str());
-		char* delim = strtok(cline, " ");
-		while (delim != NULL) {
-			std::string parsed_word(delim);
-			parsed_line.push_back(parsed_word);
-			delim = strtok(NULL, " ");
-			// std::cout<<"delim = "<<delim<<"\n";
-		}
-		if (parsed_line.size() != 3) {
-			std::cout<<"Problem for reading platform file \n"; 
-		}
+	// 	char* cline = const_cast<char*>(line.c_str());
+	// 	char* delim = strtok(cline, " ");
+	// 	while (delim != NULL) {
+	// 		std::string parsed_word(delim);
+	// 		parsed_line.push_back(parsed_word);
+	// 		delim = strtok(NULL, " ");
+	// 		// std::cout<<"delim = "<<delim<<"\n";
+	// 	}
+	// 	if (parsed_line.size() != 3) {
+	// 		std::cout<<"Problem for reading platform file \n"; 
+	// 	}
 
-		platform_x_pos.push_back(std::stod(parsed_line[0]));
-		platform_y_pos.push_back(std::stod(parsed_line[1]));
-		platform_rad.push_back(std::stod(parsed_line[2]));
+	// 	platform_x_pos.push_back(std::stod(parsed_line[0]));
+	// 	platform_y_pos.push_back(std::stod(parsed_line[1]));
+	// 	platform_rad.push_back(std::stod(parsed_line[2]));
 
-	}
+	// }
 
-	int n=platform_x_pos.size();
+	// int n=platform_x_pos.size();
 
 
 
-	for(int i=0;i<n;i++){
-		std::cout<<"id dans addplatform = "<<id<<"\n";
-		double x = platform_x_pos[i];
-		double y = platform_y_pos[i];
-		double radius = platform_rad[i];
-		// utils::AddSphereGeometry(platform.get(), cp.mat_pp, radius, ChVector<>(x, y, 0), ChQuaternion<>(1, 0, 0, 0), true);
-		AddSphereWall(id--,msystem,cp,radius,ChVector<>(x, y, 0),ChVector<>(0));
+	// for(int i=0;i<n;i++){
+	// 	std::cout<<"id dans addplatform = "<<id<<"\n";
+	// 	double x = platform_x_pos[i];
+	// 	double y = platform_y_pos[i];
+	// 	double radius = platform_rad[i];
+	// 	// utils::AddSphereGeometry(platform.get(), cp.mat_pp, radius, ChVector<>(x, y, 0), ChQuaternion<>(1, 0, 0, 0), true);
+	// 	AddSphereWall(id--,msystem,cp,radius,ChVector<>(x, y, 0),ChVector<>(0));
 
-	}
+	// }
 
 	plist.second = msystem->Get_bodylist().size() - 1;
 	return plist;
