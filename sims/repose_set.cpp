@@ -907,7 +907,7 @@ int main(int argc, char* argv[]) {
 	double start_time = time;
 	double time_loop = cp.time_loop;
 	double time_save = cp.time_save;
-	double threshold = 400;
+	double threshold = 1;
 
 	
 	// Iterate through simulation. Calculate resultant forces and motion for each timestep

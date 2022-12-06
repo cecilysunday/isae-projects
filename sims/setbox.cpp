@@ -232,6 +232,8 @@ int main(int argc, char* argv[]) {
 		return -1;
 	}
 
+	GetLog() << "\nNumber of particles: " << mstats.num_particles;
+
 	// Create and configure the irrlicht visualizer 
 	#ifdef CHRONO_IRRLICHT
 	auto application = chrono_types::make_shared<ChVisualSystemIrrlicht>();
@@ -276,15 +278,15 @@ int main(int argc, char* argv[]) {
 
 		// Save and write data every (cp.time_save / time_step) steps (particles only, not walls)
 		if (time > time_save) {
-			/*if (ArchiveState(msystem, mstats, cp.proj_path, mstats.num_particles, glist.first, time) != 0) {
+			if (ArchiveState(msystem, mstats, cp.proj_path, mstats.num_particles, glist.first, time) != 0) {
 				fprintf(stderr, "\nERR: Error archiving run-time data \n");
 				return -1;
-			}*/
+			}
 			time_save += cp.time_save;
 		}
 
 		// Calculate the average kinetic energy of all particles. If the max particle vel < threshold, exit the loop.
-		//if (CalcAverageKE(msystem, cp.proj_path, mstats.num_particles, glist.first, time, 1)) break;
+		if (CalcAverageKE(msystem, cp.proj_path, mstats.num_particles, glist.first, time, 1)) break;
 	}
 
 	// Export the final state data for all bodies in the system
