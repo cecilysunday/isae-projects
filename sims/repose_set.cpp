@@ -340,6 +340,10 @@ std::pair<size_t, size_t> FillFunnel_setbox(ChSystemMulticoreSMC* msystem, const
 	// Define temporary container dimensions
 	double temp_height = cp.clength_z * 3.3;
 	double marg = cp.grad * 1.5;
+	double crad=cp.funnel_large_dia/2.0+cp.grad;
+	int numd_body=round(CH_C_PI/asin(cp.grad/crad));
+	crad=cp.grad/sin(CH_C_PI/numd_body);
+	int num_particles = round(0.25*pow(cp.platform_size/2.0/cp.grad,3)*tan(CH_C_PI/3.0));
 
 	// Calculate offsets required for constructing the particle cloud
 	double sft_x = marg;
