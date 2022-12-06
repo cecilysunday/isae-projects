@@ -371,7 +371,11 @@ std::pair<size_t, size_t> FillFunnel_setbox(ChSystemMulticoreSMC* msystem, const
 
 	// Construct a particle cloud inside of the box limits
 	ChVector<> pos_ref = ChVector<>(-cp.clength_x / 2.0 + marg, -cp.clength_y / 2.0 + marg, marg);
-	for (int iz = 0; iz < numz; ++iz) {
+	int nb_beads=0;
+	int iz=0;
+	// for (int iz = 0; iz < numz; ++iz) {
+	while (nb_beads<num_particles){
+		iz+=1;
 		for (int iy = 0; iy < numy; ++iy) {
 			double posx = sft_x * (iy % 2) + sft_x * ((iz + 1) % 2);
 			double posy = sft_y * iy + sft_w * (iz % 2);
@@ -383,6 +387,7 @@ std::pair<size_t, size_t> FillFunnel_setbox(ChSystemMulticoreSMC* msystem, const
 					for (int ix = 0; ix < numx; ++ix) {
 						if (pos_next.x() <= cp.clength_x / 2.0 - marg && pos_next.x() >= -cp.clength_x / 2.0 + marg) {
 							AddSphere(id++, msystem, cp, distribution(generator), pos_next, ChRandomXYZ(cp.gvel),false);
+							nb_beads+=1;
 						}
 						pos_next += ChVector<>(2.0 * sft_x, 0, 0);
 					}
