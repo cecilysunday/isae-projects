@@ -438,9 +438,11 @@ int main(int argc, char* argv[]) {
 	}
 
 	// Add the container and grains to the simulation
-	std::pair<size_t, size_t> plist = AddPlatform(&msystem,cp,cfile);
-	std::pair<size_t, size_t> wlist = AddContainer(&msystem, cp,-plist.second-1);
-	wlist.first=plist.first;
+	// std::pair<size_t, size_t> plist = AddPlatform(&msystem,cp,cfile);
+	// std::pair<size_t, size_t> wlist = AddContainer(&msystem, cp,-plist.second-1);
+	// wlist.first=plist.first;
+
+	std::pair<size_t, size_t> wlist = AddContainer(&msystem, cp,0);
 	std::pair<size_t, size_t> glist = FillContainer(&msystem, cp);
 
 	// Create an object to track certain system info and stats
