@@ -61,12 +61,7 @@ void AddSphere(int id, ChSystemMulticoreSMC* msystem, const ConfigParameters& cp
 	body->SetPos_dt(init_v);
 	body->SetWvel_par(VNULL);
 	body->SetInertiaXX(inertia);
-	if (id%2==0) {
-		body->SetBodyFixed(false);
-	}
-	else{
-		body->SetBodyFixed(true);
-	}
+	body->SetBodyFixed(false);
 	body->SetCollide(true);
 
 	body->GetCollisionModel()->ClearModel();
@@ -99,7 +94,7 @@ void AddSphereWall(int id, ChSystemMulticoreSMC* msystem, const ConfigParameters
 	body->SetMass(mass);
 	body->SetPos(pos);
 	body->SetRot(QUNIT);
-	body->SetPos_dt(ChVector<>(0));
+	body->SetPos_dt(VNULL);
 	body->SetWvel_par(VNULL);
 	body->SetInertiaXX(inertia);
 	body->SetBodyFixed(true);
@@ -443,11 +438,11 @@ int main(int argc, char* argv[]) {
 	}
 
 	// Add the container and grains to the simulation
-	// std::pair<size_t, size_t> plist = AddPlatform(&msystem,cp,cfile);
-	// std::pair<size_t, size_t> wlist = AddContainer(&msystem, cp,-plist.second-1);
-	// wlist.first=plist.first;
+	std::pair<size_t, size_t> plist = AddPlatform(&msystem,cp,cfile);
+	std::pair<size_t, size_t> wlist = AddContainer(&msystem, cp,-plist.second-1);
+	wlist.first=plist.first;
 
-	std::pair<size_t, size_t> wlist = AddContainer(&msystem, cp,0);
+	// std::pair<size_t, size_t> wlist = AddContainer(&msystem, cp,0);
 	std::pair<size_t, size_t> glist = FillContainer(&msystem, cp);
 
 	// Create an object to track certain system info and stats
