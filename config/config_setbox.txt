@@ -24,10 +24,11 @@ cmass 1.0E3
 
 ## Geometric properties of the granular surface material
 gdia 2.65
+grad_std 0.01
 gmarg 0.5
 grho 2.48E-3
 gvel 1.0E3
-bead_rad_std 0.01
+
 
 ## Simulation run-time parameters
 grav_x 0.0

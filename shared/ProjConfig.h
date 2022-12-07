@@ -44,6 +44,7 @@ typedef struct ConfigParameters {
 
 	// Geometic properties of the granular surface material
 	double gdia = 0.0;								/// Grain diameter 
+	double grad_std=0.0;							/// Grain size distribution - standard deviation
 	double gmarg = 0.0;								/// Margin envelope around each grain
 	double grho = 0.0;								/// Grain density
 	double gvel = 0.0;								/// Initial mixing velocity of grains
@@ -86,7 +87,6 @@ typedef struct ConfigParameters {
 	double funnel_small_dia=0.0;
 	double funnel_large_dia=0.0;
 	double height_stem=0.0;
-	double bead_rad_std=0.0;
 	std::string config_platform_file = "NA"; 
 
 	uint max_itbilateral = 100;

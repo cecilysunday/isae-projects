@@ -221,6 +221,7 @@ int WriteParameterFile(const ConfigParameters& config) {
 		<< "\n"
 		<< "\n" << "## Geometric properties of the granular surface material"
 		<< "\n" << "gdia " << config.gdia
+		<< "\n" << "grad_std " << config.grad_std
 		<< "\n" << "gmarg " << config.gmarg
 		<< "\n" << "grho " << config.grho
 		<< "\n" << "gvel " << config.gvel
@@ -291,6 +292,7 @@ int WriteConfigFile(const ConfigParameters &config) {
 		<< "\n"
 		<< "\n" << "## Geometric properties of the granular surface material"
 		<< "\n" << "gdia " << config.gdia
+		<< "\n" << "grad_std " << config.grad_std
 		<< "\n" << "gmarg " << config.gmarg
 		<< "\n" << "grho " << config.grho
 		<< "\n" << "gvel " << config.gvel
@@ -386,7 +388,7 @@ int ComputeDerivedStuctValues(ConfigParameters* config, const std::string& dates
 	if (config->proj_type=="repose"){
 		const std::string platform_size = std::to_string(config->platform_size).substr(0,std::to_string(config->platform_size).rfind(".")+3);;
 		const std::string grad = std::to_string(config->grad).substr(0,std::to_string(config->grad).rfind(".")+3);;
-		const std::string bead_rad_std= std::to_string(config->bead_rad_std).substr(0,std::to_string(config->bead_rad_std).rfind(".")+4);;
+		const std::string bead_rad_std= std::to_string(config->grad_std).substr(0,std::to_string(config->grad_std).rfind(".")+4);;
 		// double platform_size = std::ceil(config->platform_size * 100.0) / 100.0;
 		// double grad = std::ceil(config->grad * 100.0) / 100.0;
 		// double bead_rad_std = std::ceil(config->bead_rad_std * 100.0) / 100.0;
@@ -494,7 +496,7 @@ int MapParameters(ConfigParameters& config, const std::vector<std::string>& pars
 	else if (param == "height_stem") config.height_stem= std::stod(val);
 	else if (param == "funnel_small_diameter") config.funnel_small_dia= std::stod(val);
 	else if (param == "funnel_large_diameter") config.funnel_large_dia= std::stod(val);
-	else if (param == "bead_rad_std") config.bead_rad_std= std::stod(val);
+	else if (param == "grad_std") config.grad_std= std::stod(val);
 
 	
 	else {
