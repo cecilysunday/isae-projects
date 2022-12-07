@@ -18,15 +18,16 @@ ad 0.0
 ## Geometric properties of the container
 clength_x 60.0
 clength_y 60.0
-clength_z 100.0
+clength_z 110.0
 cthickness 1.0
 cmass 1.0E3
 
 ## Geometric properties of the granular surface material
-gdia 3.0
+gdia 2.65
 gmarg 0.5
 grho 2.48E-3
 gvel 1.0E3
+bead_rad_std 0.01
 
 ## Simulation run-time parameters
 grav_x 0.0

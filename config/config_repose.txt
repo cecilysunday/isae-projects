@@ -18,12 +18,12 @@ ad 0.0
 ## Geometric properties of the container
 clength_x 60.0
 clength_y 60.0
-clength_z 100.0
+clength_z 110.0
 cthickness 1.0
 cmass 1.0E3
 
 ## Geometric properties of the granular surface material
-gdia 3
+gdia 2.65
 gmarg 0.5
 grho 2.48E-3
 gvel 1.0E3
@@ -48,6 +48,6 @@ height_stem 10
 funnel_small_diameter 10
 funnel_large_diameter 50
 platform_size 130
-bead_rad_std 0.2
+bead_rad_std 0.01
 
 
