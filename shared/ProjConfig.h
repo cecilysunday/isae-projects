@@ -44,7 +44,7 @@ typedef struct ConfigParameters {
 
 	// Geometic properties of the granular surface material
 	double gdia = 0.0;								/// Grain diameter 
-	double grad_std=0.0;							/// Grain size distribution - standard deviation
+	double gdia_std = 0.0;							/// Grain size distribution - diameter standard deviation
 	double gmarg = 0.0;								/// Margin envelope around each grain
 	double grho = 0.0;								/// Grain density
 	double gvel = 0.0;								/// Initial mixing velocity of grains

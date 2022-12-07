@@ -135,7 +135,7 @@ std::pair<size_t, size_t> FillContainer(ChSystemMulticoreSMC* msystem, const Con
 	// Create a generator for computing random sphere radius values that follow a normal distribution 
 	auto seed = std::chrono::system_clock::now().time_since_epoch().count();
 	std::default_random_engine generator((unsigned int)seed);
-	std::normal_distribution<double> distribution(cp.grad, cp.grad_std*cp.grad);
+	std::normal_distribution<double> distribution(cp.grad, cp.gdia_std*cp.grad);
 
 	// Construct a particle cloud inside of the box limits
 	ChVector<> pos_ref = ChVector<>(-cp.clength_x / 2.0 + marg, -cp.clength_y / 2.0 + marg, marg);
