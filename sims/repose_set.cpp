@@ -61,7 +61,12 @@ void AddSphere(int id, ChSystemMulticoreSMC* msystem, const ConfigParameters& cp
 	body->SetPos_dt(init_v);
 	body->SetWvel_par(VNULL);
 	body->SetInertiaXX(inertia);
-	body->SetBodyFixed(false);
+	if (id%2==0) {
+		body->SetBodyFixed(false);
+	}
+	else{
+		body->SetBodyFixed(true);
+	}
 	body->SetCollide(true);
 
 	body->GetCollisionModel()->ClearModel();
