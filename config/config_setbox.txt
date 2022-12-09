@@ -24,7 +24,7 @@ cmass 1.0E3
 
 ## Geometric properties of the granular surface material
 gdia 0.325
-gdia_std 0.01
+gdia_std 0.02
 gmarg 0.5
 grho 2.48E-3
 gvel 1.0E3
