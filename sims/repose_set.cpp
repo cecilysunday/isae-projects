@@ -217,7 +217,11 @@ std::pair<size_t, size_t> FillContainer(ChSystemMulticoreSMC* msystem, const Con
 			if (pos_next.z() >= height){
 				for (int ix = 0; ix < numx; ++ix) {
 					if (Sqrt(Pow(pos_next.x(), 2) + Pow(pos_next.y(), 2)) < crad_body - marg) {
-						AddSphere(id++, msystem, cp, distribution(generator), pos_next, ChRandomXYZ(cp.gvel));
+						double rad = 0.0;
+						while (rad<=0.0){
+							rad= distribution(generator);
+						} 
+						AddSphere(id++, msystem, cp, rad, pos_next, ChRandomXYZ(cp.gvel));
 					}
 					pos_next += ChVector<>(2.0 * sft_x, 0, 0);
 				}
@@ -436,6 +440,8 @@ int main(int argc, char* argv[]) {
 		fprintf(stderr, "\nERR: Error setting simulation parameters\n");
 		return -1;
 	}
+
+	
 
 	// Add the container and grains to the simulation
 	std::pair<size_t, size_t> plist = AddPlatform(&msystem,cp,cfile);

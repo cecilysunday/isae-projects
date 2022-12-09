@@ -292,7 +292,7 @@ int WriteConfigFile(const ConfigParameters &config) {
 		<< "\n"
 		<< "\n" << "## Geometric properties of the granular surface material"
 		<< "\n" << "gdia " << config.gdia
-		<< "\n" << "grad_std " << config.gdia_std
+		<< "\n" << "gdia_std " << config.gdia_std
 		<< "\n" << "gmarg " << config.gmarg
 		<< "\n" << "grho " << config.grho
 		<< "\n" << "gvel " << config.gvel

@@ -131,6 +131,7 @@ std::pair<size_t, size_t> FillContainer(ChSystemMulticoreSMC* msystem, const Con
 	double numx = ceil(cp.clength_x / (marg * 2.0)) + 1;
 	double numy = ceil(cp.clength_y / sft_y) + 1;
 	double numz = ceil(temp_height / sft_z) + 1;
+	std::cout<<"Max number of particles = "<<numx*numy*numz<<"\n";
 
 	// Create a generator for computing random sphere radius values that follow a normal distribution 
 	auto seed = std::chrono::system_clock::now().time_since_epoch().count();
@@ -150,7 +151,11 @@ std::pair<size_t, size_t> FillContainer(ChSystemMulticoreSMC* msystem, const Con
 				if (pos_next.y() <= cp.clength_y / 2.0 - marg && pos_next.y() >= -cp.clength_y / 2.0 + marg) {
 					for (int ix = 0; ix < numx; ++ix) {
 						if (pos_next.x() <= cp.clength_x / 2.0 - marg && pos_next.x() >= -cp.clength_x / 2.0 + marg) {
-							AddSphere(id++, msystem, cp, distribution(generator), pos_next, ChRandomXYZ(cp.gvel));
+							double rad = 0.0;
+							while (rad<=0.0){
+								rad=distribution(generator);
+							}
+							AddSphere(id++, msystem, cp, rad, pos_next, ChRandomXYZ(cp.gvel));
 						}
 						pos_next += ChVector<>(2.0 * sft_x, 0, 0);
 					}
@@ -221,8 +226,11 @@ int main(int argc, char* argv[]) {
 		return -1;
 	}
 
+	std::cout<<"Size distribution : mean = "<<cp.gdia<<", std = "<<cp.gdia_std<<"\n";
+
 	// Add the container and grains to the simulation
 	std::pair<size_t, size_t> wlist = AddContainer(&msystem, cp);
+	std::cout<<"Container filled \n";
 	std::pair<size_t, size_t> glist = FillContainer(&msystem, cp);
 
 	// Create an object to track certain system info and stats
