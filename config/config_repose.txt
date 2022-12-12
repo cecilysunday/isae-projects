@@ -24,6 +24,7 @@ cmass 1.0E3
 
 ## Geometric properties of the granular surface material
 gdia 2.65
+grad_std 0.01
 gmarg 0.5
 grho 2.48E-3
 gvel 1.0E3
@@ -48,6 +49,6 @@ height_stem 10
 funnel_small_diameter 10
 funnel_large_diameter 50
 platform_size 130
-bead_rad_std 0.01
+
 
 

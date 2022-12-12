@@ -23,8 +23,8 @@ cthickness 1.0
 cmass 1.0E3
 
 ## Geometric properties of the granular surface material
-gdia 0.655
-gdia_std 0.02
+gdia 2.65
+gdia_std 0.1
 gmarg 0.5
 grho 2.48E-3
 gvel 1.0E3
@@ -40,5 +40,5 @@ time_save 0.1
 sim_duration 10
 
 ## Simulation solver and collision detection parameters
-force_model hertz
+force_model hooke
 adhesion_model constant

@@ -5,7 +5,7 @@ proj_container box
 proj_units mm-g-s
 
 ## Material properties shared by all bodies
-youngs 7.0E5
+youngs 7.05E5
 poisson 0.24
 mu_pp 0.16
 mu_pw 0.45
