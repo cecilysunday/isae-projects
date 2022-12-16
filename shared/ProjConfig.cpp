@@ -457,6 +457,9 @@ int MapParameters(ConfigParameters& config, const std::vector<std::string>& pars
 	else if (param == "grho") config.grho = std::stod(val);
 	else if (param == "gvel") config.gvel = std::stod(val);
 	else if (param == "gmass") config.gmass = std::stod(val);
+	else if (param == "gsr") config.gsr = std::stod(val);
+	else if (param == "fc") config.fc = std::stod(val);
+	else if (param == "gdia_std_s") config.gdia_std_s = std::stod(val);
 
 	else if (param == "ilength_x") config.ilength_x = std::stod(val);
 	else if (param == "ilength_y") config.ilength_y = std::stod(val);

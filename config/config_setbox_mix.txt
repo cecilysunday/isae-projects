@@ -16,18 +16,21 @@ cor_pw 0.5
 ad 0.0
 
 ## Geometric properties of the container
-clength_x 10
-clength_y 10
-clength_z 20
+clength_x 60
+clength_y 60
+clength_z 110
 cthickness 1.0
 cmass 1.0E3
 
 ## Geometric properties of the granular surface material
-gdia 1
+gdia 2.65
 gdia_std 0.25
 gmarg 0.5
 grho 2.48E-3
 gvel 1.0E3
+gsr 0.5
+fc 0.3
+gdia_std_s 0.25
 
 
 ## Simulation run-time parameters

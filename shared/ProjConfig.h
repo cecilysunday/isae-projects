@@ -50,6 +50,9 @@ typedef struct ConfigParameters {
 	double gvel = 0.0;								/// Initial mixing velocity of grains
 	double gmass = 0.0;								/// Grain mass
 	double grad = 0.0;								/// Grain Radius
+	double gsr = 0.0;								//Grain Size Ratio for mix
+	double fc = 0.0;								///Finer content for mix
+	double gdia_std_s = 0.0;						///grain size distribution - diameter standard deviation for small beads for mix
 
 	// Geometric properties of the intruder
 	double ilength_x = 0.0;							/// Intruder dimension along the x-axis

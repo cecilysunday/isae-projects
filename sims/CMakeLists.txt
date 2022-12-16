@@ -12,6 +12,7 @@ cmake_minimum_required(VERSION 3.1)
 #--------------------------------------------------------------
 
 SET(TESTS
+  setbox_mix
   benchmark
   impact
   penetrometer
