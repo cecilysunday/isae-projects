@@ -226,6 +226,9 @@ int WriteParameterFile(const ConfigParameters& config) {
 		<< "\n" << "grho " << config.grho
 		<< "\n" << "gvel " << config.gvel
 		<< "\n" << "gmass " << config.gmass
+		<< "\n" << "gsr " << config.gsr
+		<< "\n" << "fc " << config.fc
+		<< "\n" << "gdia_std_s " << config.gdia_std_s
 		<< "\n"
 		<< "\n" << "## Geometric properties of the intruder"
 		<< "\n" << "ilength_x " << config.ilength_x
@@ -296,6 +299,9 @@ int WriteConfigFile(const ConfigParameters &config) {
 		<< "\n" << "gmarg " << config.gmarg
 		<< "\n" << "grho " << config.grho
 		<< "\n" << "gvel " << config.gvel
+		<< "\n" << "gsr " << config.gsr
+		<< "\n" << "fc " << config.fc
+		<< "\n" << "gdia_std_s " << config.gdia_std_s
 		<< "\n"
 		<< "\n" << "## Simulation run-time parameters"
 		<< "\n" << "grav_x " << config.grav_x
